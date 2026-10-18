@@ -51,7 +51,8 @@ before provisioning or installing.
 
 1. Read the [infrastructure overview](docs/infrastructure.md) and complete the
    [environment checklist](docs/prerequisites.md).
-2. Obtain the bundle and checksum from the same trusted distribution. From the
+2. [Download the distribution](docs/installation.md#get-the-distribution), keeping
+   the bundle and checksum together. From the
    repository root, verify them:
 
    ```bash

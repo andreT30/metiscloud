@@ -4,10 +4,26 @@ Use Oracle Autonomous Database with managed APEX. Public and private endpoints
 use the same procedure; their connectivity checks differ. Complete
 [environment preparation](prerequisites.md) before starting.
 
-You need a new target schema, an ADMIN SQLcl saved connection, a workspace to
+You need an unused target schema name, an ADMIN SQLcl saved connection, a workspace to
 create or reuse, and a non-conflicting APEX application ID. Have an OCI
 administrator available for IAM and a DBA available for database-wide decisions.
 Do not install over an existing application schema.
+
+## Get the distribution
+
+Open the [MetisCloud repository](https://github.com/andreT30/metiscloud), select
+**Code → Download ZIP**, and extract the download into a working directory.
+Alternatively, clone the repository if you already use Git. Git is not required
+to run the installer.
+
+Open a terminal in the extracted directory containing `README.md`. Check that
+`bundle-app.zip`, `bundle-app.zip.sha256`, `VERSION` and
+`db/deployer/install_mc_bundle.sh` are present. Keep the application bundle ZIP
+intact; the installer reads it directly. Do not mix a bundle with a checksum or
+installer from a different distribution.
+
+Keep wallets, journals and connection records outside this directory. Retain
+the supplied distribution and version for your installation record.
 
 ## Verify the supplied release
 
@@ -22,6 +38,9 @@ Stop if the checksum check fails. It checks the ZIP against the supplied checksu
 without connecting to your database. Obtain both files from a trusted source;
 a checksum alone does not authenticate the publisher. The installer performs
 additional bundle validation before applying the release.
+
+The expected checksum result is `bundle-app.zip: OK`. Resolve a missing file or
+checksum mismatch before connecting the installer to a database.
 
 ## Choose database and workspace settings
 
@@ -67,12 +86,24 @@ bash db/deployer/install_mc_bundle.sh \
   --target-connection-name MC_TARGET \
   --schema MC_TARGET --confirm-create-schema MC_TARGET \
   --workspace MC_WORKSPACE --workspace-mode CREATE \
-  --workspace-admin WORKSPACE_ADMIN --first-admin MC_ADMIN \
+  --first-admin MC_ADMIN \
   --target-app-id 2300 --apex-offset AUTO \
   --journal-directory /secure/metiscloud/initial-001
 ```
 
 Replace every example name and the journal path with your approved values.
+Use the [example-name reference](infrastructure.md#names-used-in-the-installation-examples)
+to distinguish the database, workspace and application accounts. The journal
+directory must be new and its parent directory must already exist. Choose a
+private writable location and let the installer create the journal directory.
+The example leaves the workspace administrator unspecified so the installer
+can prompt after detecting Builder authentication. For Autonomous Database
+sign-in, choose the new target schema account or an existing eligible database
+account as instructed by the prompt. Do not invent a separate database account
+name that does not exist.
+
+For a shared database, use `EXISTING` and arrange prerequisite approval
+with its DBA rather than copying the `NEW` choice above.
 INITIAL `--dry-run` previews the phases without creating the schema or importing
 APEX; it cannot prove OCI access or database compilation.
 
@@ -81,6 +112,11 @@ APEX; it cannot prove OCI access or database compilation.
 Read the final summary and review compilation warnings before admitting users.
 Confirm the target application ID, workspace and first administrator. Application
 jobs start disabled; the install recovery monitor is an internal exception.
+
+Ask the workspace administrator to open App Builder in the target workspace and
+confirm that the installed application is present with the chosen ID. Run it to
+obtain the application sign-in URL. Keep that URL in your private deployment
+record and use it for [first sign-in](first-use.md#sign-in-as-the-first-administrator).
 
 Keep the journal after success under your operational retention policy. If
 installation fails, preserve it and follow [failed-install cleanup](recovery-and-removal.md).

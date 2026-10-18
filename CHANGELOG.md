@@ -4,6 +4,15 @@ Public distribution changes start with this baseline. See [VERSION](VERSION)
 for the bundled application version and the [upgrade guide](docs/upgrade.md)
 before updating an installation.
 
+## Unreleased
+
+### Documentation
+
+- Added database preparation steps, generic IAM and SQLcl connection examples,
+  and checks before installation.
+- Clarified distribution download, schema creation, first application access,
+  Setup inputs and restricted-user verification. The application bundle is unchanged.
+
 ## 26.10.18.02 - Initial public baseline
 
 ### Included

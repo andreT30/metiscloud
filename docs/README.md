@@ -6,11 +6,13 @@ explains what each area does and where to find detailed help inside the applicat
 
 ## Install an environment
 
-1. [Infrastructure](infrastructure.md): understand the components and access paths.
+1. [Infrastructure](infrastructure.md): provision the database and check access paths.
 2. [Requirements and preparation](prerequisites.md): check compatibility, IAM,
    network access and workstation tools.
-3. [Installation](installation.md): verify the bundle and run INITIAL.
-4. [First sign-in and Setup](first-use.md): configure the target and load data.
+3. [Installation](installation.md): download the distribution, verify the bundle,
+   run INITIAL and locate the installed application.
+4. [First sign-in and Setup](first-use.md): configure the target, load data and
+   check a report against its source.
 5. [Access control](access-control.md): assign roles and workloads, then test access.
 6. [Acceptance checklist](acceptance-checklist.md): record your environment's results.
 

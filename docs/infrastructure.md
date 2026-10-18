@@ -21,6 +21,48 @@ The public repository supplies the application bundle and target installer.
 Provision the database, networks and OCI policies before running INITIAL.
 No infrastructure-provisioning stack is included.
 
+## Prepare an Autonomous Database
+
+An OCI administrator completes these steps before installation. Use Oracle's
+[database provisioning guide](https://docs.oracle.com/en-us/iaas/autonomous-database-serverless/doc/autonomous-provision.html)
+for the current Console screens.
+
+1. Select the deployment region and compartment. Keep the database OCID and
+   compartment OCID in your private deployment record; they identify different
+   resources and are not interchangeable.
+2. Create an Autonomous Database with managed APEX and the capabilities in
+   [database compatibility](prerequisites.md#database-compatibility). Choose
+   compute, storage, autoscaling and backup settings for your expected workload.
+3. Select restricted public access or a private endpoint. For public access,
+   allow the approved installer and browser networks. For private access, select
+   the approved VCN/subnet and arrange routing and DNS for both clients.
+4. Set the database ADMIN password through the Console and store it in your
+   approved password manager. Do not put it in a command or deployment document.
+5. Wait for the database to become available. Open its managed APEX service and
+   confirm that the sign-in page is reachable from the intended user network.
+6. Prepare the [Resource Principal policies and SQLcl connection](prerequisites.md).
+   The installer creates the application schema later; do not create it manually.
+
+Before proceeding, you should have an available database, a reachable APEX
+sign-in page and an approved network path for SQLcl. An OCI Console login alone
+does not confirm any of these application access paths.
+
+## Names used in the installation examples
+
+These are generic names, not required values or a reference environment.
+Replace them consistently throughout the procedure. Values in angle brackets,
+such as `<ADB_OCID>`, must also be replaced before use.
+
+| Example | Meaning |
+| --- | --- |
+| `TARGET_ADMIN` | SQLcl saved connection for database ADMIN. |
+| `MC_TARGET` | Unused database schema name and the target SQLcl saved-connection name. |
+| `MC_WORKSPACE` | APEX workspace to create, or an approved existing workspace. |
+| `WORKSPACE_ADMIN` | Workspace administrator identity; its requirements depend on Builder authentication. |
+| `MC_ADMIN` | First MetisCloud application administrator. |
+| `2300` | Application ID; confirm that it is unused in the target APEX instance. |
+| `/secure/metiscloud/initial-001` | Example private journal path, outside the downloaded distribution. |
+
 ## Check the three access paths
 
 1. The operator's workstation must reach the database through the approved SQLcl
@@ -45,8 +87,7 @@ approved context to their configured service. Review the
 
 Choose compute, storage, autoscaling and backup retention with the DBA. Data
 volume depends on tenancy size, reporting history, collected resource types and
-enabled features. There is no established universal minimum sizing profile or
-complete tested-version matrix for this candidate.
+enabled features. This guide does not prescribe a universal minimum sizing profile.
 
 Budget for the cloud services you enable, including database operation and
 optional AI or email usage. Application licensing does not cover service charges.

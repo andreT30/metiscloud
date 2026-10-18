@@ -5,7 +5,12 @@ load: the most recent 15 days load first, while older history can take hours.
 
 ## Sign in as the first administrator
 
-Open the installed application using the target URL reported by your environment.
+Open the application URL supplied by the workspace administrator. If you do not
+have it, open managed APEX from the database's tools in the OCI Console, sign in
+to the target workspace as a Builder user, and open App Builder. Select the
+installed application by its ID and run it. Bookmark the application URL, not
+the App Builder URL. On a private endpoint, use the approved connected network.
+
 Use the first MetisCloud administrator established during INITIAL. Database
 ADMIN and workspace administrator credentials are not interchangeable with this
 application account.
@@ -23,6 +28,20 @@ see [Authentication](configuration.md#authentication).
 
 Open **Administration → App Config → Setup**. Keep optional AI and email features off until
 you have approved their access and data handling.
+
+Have these values ready before applying the configuration:
+
+| Value | Where to obtain it or how to choose it |
+| --- | --- |
+| Root tenancy identifier | Copy your tenancy OCID from OCI tenancy details. This is different from Oracle's report-store tenancy identifier in the IAM policy. |
+| Database region | Use the region containing the installed Autonomous Database. |
+| Home region | Check your tenancy's home region; it may differ from the database region. |
+| Cost report location | Confirm the location of your tenancy's FOCUS reports using OCI Cost and Usage Reports and the field's in-app help. Do not substitute an arbitrary bucket. |
+| Defined tags | Use your existing namespace and key names. For example, `Finance.CostCenter` means namespace `Finance`, key `CostCenter`; use it only if that tag exists in your tenancy. |
+| Collection regions | Choose subscribed regions within your approved reporting scope. |
+
+The [configuration reference](configuration.md#target-settings) maps these
+choices to their application settings. Use the **?** help for field details.
 
 1. Enter the target tenancy, regions, cost report
    location and tagging choices. Review the descriptions alongside each field.
@@ -65,6 +84,10 @@ verification before reconciliation; see [Troubleshooting](troubleshooting.md).
 An empty result can mean that history is still loading. An authorization error
 requires an access check, not another ingestion job.
 
+Before inviting users, confirm that the recent load has completed, one report
+agrees with its source for the same period and scope, and a known resource
+appears in inventory. Continue monitoring older history separately.
+
 ## Give other users access
 
 For the role matrix and provider-specific steps, see
@@ -87,6 +110,13 @@ with none active sees **Awaiting workload assignment**, rather than unrestricted
 data. After assignment activation, they can refresh that page to open Analysis.
 Test both allowed and denied access. Group membership alone must not give a User
 all workloads.
+
+For example, create a separate APEX account named `MC_READER` with membership in
+`Users` only. Link it in User access and assign one workload. Sign in as
+`MC_READER` in a separate browser session: the assigned workload must be visible,
+an unassigned workload must be unavailable, and Administration must be denied.
+Use your own account name and workloads; do not give this test account an
+administrator or contributor group membership.
 
 Disabling local access blocks this application without deleting the APEX or OCI
 account. The initial administrator is protected and at least one administrator

@@ -30,8 +30,8 @@ Use an Autonomous Database capable of the bundle's SQL property graphs and
 native JSON objects, with managed APEX available. The supplied application requires
 compatibility with **APEX 26.1.5**; do not assume it imports into older versions. Record
 actual database, APEX and SQLcl versions in the [acceptance checklist](acceptance-checklist.md).
-A lowest-supported database version and complete tested-version matrix have not
-yet been established for this release candidate.
+Do not infer compatibility with other database or APEX versions from a successful
+connection alone.
 
 Database-wide automatic indexing and Resource Principal settings require DBA
 approval. INITIAL database mode NEW authorizes prerequisite configuration;
@@ -40,7 +40,8 @@ Review the [standalone installer](../db/deployer/install_mc_bundle.sh), includin
 property-graph and context privileges. Do not assume a restricted or free service
 tier meets these requirements.
 
-Choose a new empty schema, workspace name and non-conflicting application ID.
+Choose an unused schema name, workspace name and non-conflicting application ID.
+INITIAL creates the schema; do not create an empty schema in advance.
 The examples use `MC_TARGET`, `MC_WORKSPACE` and app ID `2300`; these are examples,
 not required identities.
 
@@ -68,6 +69,42 @@ compartment. Approve service permissions, allow for IAM propagation, and test
 from the target schema, not only a human administrator account. Oracle documents
 [Resource Principal setup](https://docs.oracle.com/en-us/iaas/autonomous-database-serverless/doc/resource-principal.html).
 The installer enables database access but cannot create tenancy policies.
+
+### Example: select one database
+
+In OCI Identity and Security, create a dynamic group for the application database.
+For example, name it `MetisCloudDatabase` and use this matching rule:
+
+```text
+resource.id = '<ADB_OCID>'
+```
+
+Replace `<ADB_OCID>` with the database OCID from its details page, not the
+compartment or tenancy OCID. Follow Oracle's Resource Principal instructions
+above for your identity-domain configuration. Review membership before granting
+permissions: the database identity receives these permissions, not an individual
+MetisCloud user.
+
+### Example: allow cost-report reads
+
+Create the following policy in your tenancy's root compartment. Replace
+`<DYNAMIC_GROUP>` with your dynamic-group name, qualified with its identity
+domain where required. Obtain `<ORACLE_REPORT_TENANCY_OCID>` from Oracle's
+[cost-report cross-tenancy policy example](https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functions_pbf_catalog_cost_reports_focus_converter.htm)
+(Permissions section).
+It identifies Oracle's report store, not your own tenancy.
+
+```text
+Define tenancy usage-report as <ORACLE_REPORT_TENANCY_OCID>
+Endorse dynamic-group <DYNAMIC_GROUP> to read objects in tenancy usage-report
+```
+
+Only the report-read policy is needed from that example; MetisCloud does not
+require deploying the converter function. Confirm the report-store identifier
+applies to your OCI realm. This policy permits report reads; it does not grant
+inventory, subscription, Monitoring or optional service access.
+
+### Review permissions for each capability
 
 | Capability | Permission boundary to review |
 | --- | --- |
@@ -101,15 +138,37 @@ sql -version
 ```
 
 Configure the Autonomous Database wallet/cloud connection outside this checkout.
-For a configured wallet/TNS alias, start `sql /nolog`, then enter:
+For an mTLS connection:
+
+1. On the database details page, open **Database connection** and download the
+   instance wallet using your organization's credential-handling procedure.
+2. Store the wallet ZIP in a private directory outside the distribution. Keep
+   its path stable; the saved connection must still work in later sessions.
+3. Choose a service alias from that database's connection information. Replace
+   `YOUR_ADB_SERVICE_ALIAS` below with that alias.
+4. Start `sql /nolog`, then configure the wallet and save the ADMIN connection:
 
 ```text
+SET CLOUDCONFIG /path/to/private/Wallet_database.zip
 CONNECT -save TARGET_ADMIN -savepwd ADMIN@YOUR_ADB_SERVICE_ALIAS
 ```
 
-Replace the alias and enter the password only at its prompt. Oracle explains
+Replace the wallet path and enter the password only at its prompt. For an
+already configured wallet/TNS connection, use its existing configuration.
+If your organization uses walletless TLS, follow its approved connection setup
+instead of downloading an mTLS wallet. Oracle describes
+[SQLcl wallet connections](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/connect-sqlcl.html) and
 [stored connections](https://docs.oracle.com/en/database/oracle/sql-developer-command-line/24.4/sqcug/managing-stored-connections.html).
-Test `sql -name TARGET_ADMIN` in a fresh terminal; `SHOW USER` must identify ADMIN.
+
+Exit SQLcl and test the saved connection in a fresh terminal:
+
+```bash
+sql -name TARGET_ADMIN
+```
+
+At the SQLcl prompt, run `SHOW USER`. It must identify `ADMIN`. Then run `EXIT`
+to return to the shell before starting the installer. If reconnecting fails,
+fix the wallet path, saved connection or network access before continuing.
 Protect the saved connection and wallet. INITIAL creates the separate target
 saved connection. Do not substitute SQL*Plus for SQLcl.
 
