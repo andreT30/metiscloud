@@ -2,7 +2,7 @@
 
 This release targets Oracle Autonomous Database with managed Oracle APEX.
 Public and private endpoints use the same bundle and installer. Self-managed
-Database, APEX and ORDS are outside this guide. Complete this checklist before
+Database, APEX and ORDS are outside this guide. Prepare the following before
 [installation](installation.md).
 
 ## People and access
@@ -21,6 +21,10 @@ deployment record outside this repository.
 
 Provision the database in the selected compartment/region using Oracle's
 [provisioning guide](https://docs.oracle.com/en-us/iaas/autonomous-database-serverless/doc/autonomous-provision.html).
+Strongly prefer **Autonomous AI Lakehouse**, formerly Autonomous Data Warehouse,
+for MetisCloud's batch loads and analytical queries. Select **Lakehouse** as the
+workload type for a new deployment; see Oracle's
+[workload types](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/about-autonomous-database-workloads.html).
 Choose compute/storage and backup retention for the workload, review autoscaling
 costs, and choose restricted public access or a private endpoint. Confirm managed
 APEX is enabled in the database tools configuration. Provisioning is an OCI
@@ -29,7 +33,7 @@ administrator action, not an installer phase.
 Use an Autonomous Database capable of the bundle's SQL property graphs and
 native JSON objects, with managed APEX available. The supplied application requires
 compatibility with **APEX 26.1.5**; do not assume it imports into older versions. Record
-actual database, APEX and SQLcl versions in the [acceptance checklist](acceptance-checklist.md).
+actual database, APEX and SQLcl versions in your private deployment record.
 Do not infer compatibility with other database or APEX versions from a successful
 connection alone.
 
@@ -85,24 +89,42 @@ above for your identity-domain configuration. Review membership before granting
 permissions: the database identity receives these permissions, not an individual
 MetisCloud user.
 
-### Example: allow cost-report reads
+### Example: reporting and inventory policy
 
-Create the following policy in your tenancy's root compartment. Replace
-`<DYNAMIC_GROUP>` with your dynamic-group name, qualified with its identity
-domain where required. Obtain `<ORACLE_REPORT_TENANCY_OCID>` from Oracle's
-[cost-report cross-tenancy policy example](https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functions_pbf_catalog_cost_reports_focus_converter.htm)
-(Permissions section).
-It identifies Oracle's report store, not your own tenancy.
+Create this policy in your tenancy's root compartment. Replace
+`MetisCloudDatabase` with the dynamic group that selects your database, qualified
+with its identity domain where required. A single database needs only its own
+dynamic group; repeat the grants for another group only if another approved
+resource also needs this access.
 
 ```text
-Define tenancy usage-report as <ORACLE_REPORT_TENANCY_OCID>
-Endorse dynamic-group <DYNAMIC_GROUP> to read objects in tenancy usage-report
+define tenancy usage-report as ocid1.tenancy.oc1..aaaaaaaaned4fkpkisbwjlr56u7cj63lf3wffbilvqknstgtvzub7vhqkggq
+endorse dynamic-group MetisCloudDatabase to read objects in tenancy usage-report
+Allow dynamic-group MetisCloudDatabase to inspect tenancies in tenancy
+Allow dynamic-group MetisCloudDatabase to read all-resources in tenancy
 ```
 
-Only the report-read policy is needed from that example; MetisCloud does not
-require deploying the converter function. Confirm the report-store identifier
-applies to your OCI realm. This policy permits report reads; it does not grant
-inventory, subscription, Monitoring or optional service access.
+Keep the `define tenancy` identifier exactly as shown for the Oracle report
+store described in the [Required IAM Policy](https://docs.oracle.com/en-us/iaas/Content/Billing/Concepts/costusagereportsoverview.htm#policy).
+It is Oracle's published tenancy identifier, not a customer identifier or secret.
+Do not replace it with your own tenancy OCID. Check the applicable Oracle
+instructions if deploying in a different realm.
+
+Oracle's example uses `endorse group` for a human-user group. The example above
+uses `endorse dynamic-group` because MetisCloud calls OCI through its database
+Resource Principal. Oracle also documents this form in its
+[cost-report access example](https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functions_pbf_catalog_cost_reports_focus_converter.htm)
+under Permissions.
+
+The endorsement permits reads from Oracle's report store. The two `Allow`
+statements permit tenancy inspection and resource reads in your tenancy.
+`read all-resources in tenancy` gives the database broad read access, including
+data exposed by services' read permissions. Use it when the approved reporting
+scope covers the tenancy. For a restricted deployment, have the OCI
+administrator replace it with the required service and compartment grants.
+It does not authorize creating, changing or deleting resources.
+Oracle's [IAM verb reference](https://docs.oracle.com/en-us/iaas/Content/Identity/policieshow/Verbs.htm)
+explains the access included in `inspect` and `read`.
 
 ### Review permissions for each capability
 
@@ -116,12 +138,44 @@ inventory, subscription, Monitoring or optional service access.
 | Email (optional) | Discover configuration and send using an approved sender in its compartment. |
 | Scaling/operational actions (optional) | Separate, explicitly approved permissions, not prerequisites for ordinary reporting. |
 
-This is a permission-planning checklist, not a universal IAM policy. Required
-statements depend on enabled features and tenancy scope. Do not grant blanket
-`manage all-resources` access. Retain the reviewed policy and a successful
-target-side check for each enabled capability with your deployment record.
+Use the reporting policy above for the core read-access example. Add permissions
+for optional AI, email or operational actions when enabling those features.
+Keep the approved policy with your private deployment record and verify access
+through Setup's connectivity checks and the relevant feature.
 
 ## Workstation and saved connection
+
+### Install the latest SQLcl
+
+Download the latest release from
+[Oracle SQLcl Downloads](https://www.oracle.com/database/sqldeveloper/technologies/sqlcl/download/).
+Use Oracle's current release rather than a SQLcl copy bundled with an older tool.
+Oracle's [installation instructions](https://docs.oracle.com/en/database/oracle/apex/26.1/aeadm/downloading-and-installing-sqlcl.html)
+describe the ZIP installation and Java requirements.
+
+1. Install Java 21, or another Java version supported by the SQLcl release you
+   download. A package that includes a Java runtime can use its bundled runtime.
+2. Download and extract the SQLcl ZIP into a tools directory outside the MetisCloud
+   distribution. The extracted `sqlcl/bin` directory contains `sql` on macOS/Linux
+   and `sql.exe` on Windows.
+3. Add that `bin` directory to your shell's `PATH`. For macOS/Linux or a compatible
+   Bash environment, replace the example path below:
+
+   ```bash
+   export PATH="/path/to/sqlcl/bin:$PATH"
+   sql -version
+   ```
+
+4. Confirm that the reported release matches the one you installed. Add the same
+   PATH setting to your shell startup configuration if you want it available in
+   future terminals. If an older release still starts, check `command -v sql` and
+   correct the PATH order.
+
+For Windows, install SQLcl and Java in a configuration accessible from the Bash
+environment that will run the deployer. A SQLcl installation available only to a
+different shell or operating environment will not satisfy the deployer's checks.
+
+### Check the workstation tools
 
 The installer requires Bash 3.2+, Oracle SQLcl (`sql`), a Java 17+ runtime,
 `zip`, `base64`, a SHA-256 utility and standard POSIX tools.
@@ -136,6 +190,8 @@ requirements for the version installed:
 bash --version
 sql -version
 ```
+
+### Save and test the ADMIN connection
 
 Configure the Autonomous Database wallet/cloud connection outside this checkout.
 For an mTLS connection:
@@ -171,15 +227,5 @@ to return to the shell before starting the installer. If reconnecting fails,
 fix the wallet path, saved connection or network access before continuing.
 Protect the saved connection and wallet. INITIAL creates the separate target
 saved connection. Do not substitute SQL*Plus for SQLcl.
-
-## Ready to install
-
-- [ ] Database and managed APEX accessible from the intended networks.
-- [ ] Database capabilities and automatic indexing approved by the DBA.
-- [ ] ADMIN saved connection tested; workspace administrator available.
-- [ ] IAM policies approved for the selected services and scope.
-- [ ] Target schema/workspace/app identity chosen.
-- [ ] Recovery owner, capacity and service costs approved.
-- [ ] Bundle and sidecar obtained from the same release.
 
 Continue with [Installation](installation.md), then [First use](first-use.md).

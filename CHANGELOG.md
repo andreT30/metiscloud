@@ -12,6 +12,9 @@ before updating an installation.
   and checks before installation.
 - Clarified distribution download, schema creation, first application access,
   Setup inputs and restricted-user verification. The application bundle is unchanged.
+- Recommended Autonomous AI Lakehouse, added current SQLcl installation guidance
+  and a complete reporting-policy example, and explained persistent recovery-journal storage.
+- Replaced deployment checklists with a verification guide.
 
 ## 26.10.18.02 - Initial public baseline
 
@@ -42,5 +45,5 @@ The legacy Table Helper shortcut has no standalone destination. Use
 **Dataset Configuration → Source** for table metadata and
 **Advanced Diagnostics → Native Schema Probe** for schema investigation.
 
-Check the [requirements](docs/prerequisites.md) and complete the
-[deployment checklist](docs/acceptance-checklist.md) for your environment.
+Read the [requirements](docs/prerequisites.md) and follow
+[deployment verification](docs/deployment-verification.md) for your environment.

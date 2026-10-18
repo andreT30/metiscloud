@@ -14,7 +14,8 @@ explains what each area does and where to find detailed help inside the applicat
 4. [First sign-in and Setup](first-use.md): configure the target, load data and
    check a report against its source.
 5. [Access control](access-control.md): assign roles and workloads, then test access.
-6. [Acceptance checklist](acceptance-checklist.md): record your environment's results.
+6. [Deployment verification](deployment-verification.md): verify reporting, access
+   and maintenance in your environment.
 
 The installer does not provision the Autonomous Database. Arrange that first
 with your OCI administrator. AI and email are optional; enable them only after
@@ -49,7 +50,7 @@ upgrade guides give the steps and checks.
 ## Release and project information
 
 - [Version](../VERSION) and [changelog](../CHANGELOG.md).
-- [Deployment checklist](acceptance-checklist.md).
+- [Deployment verification](deployment-verification.md).
 - [License](../LICENSE), [third-party notices](../THIRD_PARTY_NOTICES.md),
   [vulnerability reporting](../SECURITY.md) and [contributing](../CONTRIBUTING.md).
 

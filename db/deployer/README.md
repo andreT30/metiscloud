@@ -22,8 +22,12 @@ Use [Upgrade](../../docs/upgrade.md) for CLI and browser update instructions.
 Use [Recovery and removal](../../docs/recovery-and-removal.md) for the destructive
 modes. Do not use either as an upgrade rollback.
 
-INITIAL needs a new absolute private journal directory for a real run. Keep it
-outside this checkout. Passwords are entered at prompts, never in command flags.
+INITIAL needs a new absolute private journal directory for a real run. It records
+changes needed for failed-install recovery. Keep it in persistent storage outside
+this checkout, not under `/tmp` or another automatically cleared directory. Its
+parent must already exist; the installer creates the journal with mode `700`.
+See [journal preparation](../../docs/installation.md#prepare-the-installation-journal).
+Passwords are entered at prompts, never in command flags.
 UPDATE uses the target saved connection only; ADMIN grant remediation is not
 supported in this mode. UPDATE `--dry-run` writes planning metadata but does not
 apply selected application objects.

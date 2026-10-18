@@ -50,7 +50,7 @@ access for preparation, plus Bash, Oracle SQLcl and the tools listed in
 before provisioning or installing.
 
 1. Read the [infrastructure overview](docs/infrastructure.md) and complete the
-   [environment checklist](docs/prerequisites.md).
+   [environment preparation](docs/prerequisites.md).
 2. [Download the distribution](docs/installation.md#get-the-distribution), keeping
    the bundle and checksum together. From the
    repository root, verify them:
@@ -100,7 +100,7 @@ development repository, deployment credentials and runtime data are not included
 
 [VERSION](VERSION) identifies the bundled application version.
 [CHANGELOG.md](CHANGELOG.md) records distribution changes, starting with the
-first public baseline. Complete the [deployment checklist](docs/acceptance-checklist.md)
+first public baseline. Follow [deployment verification](docs/deployment-verification.md)
 for your environment before admitting users.
 
 ## Security and support

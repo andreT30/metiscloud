@@ -1,6 +1,12 @@
 # Infrastructure overview
 
 MetisCloud runs in your Oracle Autonomous Database with managed Oracle APEX.
+For new installations, strongly prefer the **Autonomous AI Lakehouse** workload
+type, formerly Autonomous Data Warehouse. MetisCloud loads data in batches and
+runs analytical queries, making Lakehouse the recommended choice. Oracle's
+[workload types guide](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/about-autonomous-database-workloads.html)
+describes the available choices.
+
 Users open the application in a browser. The application schema stores collected
 data and configuration; database jobs collect reports and inventory from OCI.
 You do not need a separate MetisCloud application server for this deployment path.
@@ -30,7 +36,8 @@ for the current Console screens.
 1. Select the deployment region and compartment. Keep the database OCID and
    compartment OCID in your private deployment record; they identify different
    resources and are not interchangeable.
-2. Create an Autonomous Database with managed APEX and the capabilities in
+2. Select the **Lakehouse** workload type and create the database with managed
+   APEX and the capabilities in
    [database compatibility](prerequisites.md#database-compatibility). Choose
    compute, storage, autoscaling and backup settings for your expected workload.
 3. Select restricted public access or a private endpoint. For public access,
@@ -61,7 +68,7 @@ such as `<ADB_OCID>`, must also be replaced before use.
 | `WORKSPACE_ADMIN` | Workspace administrator identity; its requirements depend on Builder authentication. |
 | `MC_ADMIN` | First MetisCloud application administrator. |
 | `2300` | Application ID; confirm that it is unused in the target APEX instance. |
-| `/secure/metiscloud/initial-001` | Example private journal path, outside the downloaded distribution. |
+| `/path/to/private/metiscloud/initial-001` | New persistent directory where INITIAL records changes for failed-install recovery. The installer creates `initial-001`; its parent must already exist. See [installation journal](installation.md#prepare-the-installation-journal). |
 
 ## Check the three access paths
 
@@ -76,7 +83,7 @@ Public and private endpoint deployments use the same bundle. For public access,
 restrict allowed networks according to your policy. For private access, arrange
 private routing and DNS from both the installer host and user networks, plus
 the necessary outbound service paths. See the
-[network preparation checklist](prerequisites.md#public-or-private-networking).
+[network preparation](prerequisites.md#public-or-private-networking).
 
 A private database endpoint does not make all dependencies private. Browsers
 also load external JavaScript and font assets, and optional AI features send

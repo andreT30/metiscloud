@@ -12,7 +12,7 @@ and the original journal directory:
 ```bash
 bash db/deployer/install_mc_bundle.sh \
   --mode CLEANUP --admin-connection TARGET_ADMIN \
-  --journal-directory /secure/metiscloud/initial-001
+  --journal-directory /path/to/private/metiscloud/initial-001
 ```
 
 CLEANUP uses ownership receipts to identify resources created by that attempt;

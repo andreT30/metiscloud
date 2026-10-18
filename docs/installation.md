@@ -55,6 +55,28 @@ to map the new schema. A workspace administrator and the first MetisCloud
 administrator are separate accounts/roles. The installer detects workspace
 builder authentication; do not enter an external identity-provider password.
 
+## Prepare the installation journal
+
+INITIAL writes a recovery journal on the computer running the installer. It
+records the target identity, completed changes and recovery information so
+CLEANUP can identify resources created by a failed installation. This is an
+operational record, not a database backup.
+
+Choose a persistent private directory outside the distribution, for example
+`/path/to/private/metiscloud/initial-001`. Replace the whole example path with
+a location owned by the installer operator. Create its parent directory first
+and restrict access to that operator. Leave `initial-001` absent: the installer
+creates it with owner-only permissions (`700`). Use a new name for each attempt
+and retain the original journal if an attempt fails.
+
+Do not use `/tmp`, `/var/tmp`, a disposable container filesystem or another
+location subject to automatic cleanup. Recovery may be needed after a reboot
+or in a later session. The path must be absolute, use letters, digits, `_`, `-`,
+`.` and `/`, and contain no spaces, traversal components or symbolic links.
+Keep the journal after installation according to your operational retention
+policy and protect any retained copy. Use the original location for
+[failed-install recovery](recovery-and-removal.md#clean-up-a-failed-initial).
+
 ## Run the guided installer
 
 ```bash
@@ -88,7 +110,7 @@ bash db/deployer/install_mc_bundle.sh \
   --workspace MC_WORKSPACE --workspace-mode CREATE \
   --first-admin MC_ADMIN \
   --target-app-id 2300 --apex-offset AUTO \
-  --journal-directory /secure/metiscloud/initial-001
+  --journal-directory /path/to/private/metiscloud/initial-001
 ```
 
 Replace every example name and the journal path with your approved values.

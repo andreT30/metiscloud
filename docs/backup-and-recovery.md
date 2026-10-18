@@ -62,4 +62,4 @@ After restore, keep traffic controlled while you:
 5. Resume approved schedules, monitor their next run, then reopen access.
 
 Record the recovered cutoff, lost transactions and elapsed recovery time.
-See [Acceptance](acceptance-checklist.md) for the environment-specific record.
+See [deployment verification](deployment-verification.md) for recovery and access checks.
