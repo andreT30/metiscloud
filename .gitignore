@@ -1,0 +1,52 @@
+# Operating-system and editor metadata
+.DS_Store
+**/.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Language and validation output
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+coverage/
+*.log
+*.tmp
+*.temp
+
+# Local configuration, credentials, and database wallets
+.env
+.env.*
+!.env.example
+wallet/
+wallets/
+*.pem
+*.key
+*.p12
+*.sso
+*.jks
+tnsnames.ora
+sqlnet.ora
+
+# Generated and extracted source releases
+apex-exports/
+bundle_app1200_v*/
+bundle_app1200_v*.zip
+*.zip
+!/bundle-app.zip
+
+# The stable release checksum is intentionally tracked.
+!/bundle-app.zip.sha256
+
+# Local maintenance material is not part of the public distribution.
+/.review/
+/AGENTS.md
+/tests/
+/scripts/
+/db/deployer/lib/
+/docs/acceptance-evidence.md
+/docs/maintainers/
