@@ -376,11 +376,15 @@ policy and protect any retained copy. Use the original location for
 
 ## Run the guided installer
 
+For a first installation, start guided INITIAL:
+
 ```bash
-bash db/deployer/install_mc_bundle.sh --interactive
+bash db/deployer/install_mc_bundle.sh --mode INITIAL --interactive
 ```
 
-Choose INITIAL. Have these values ready:
+`--mode INITIAL` selects a new installation. `--interactive` asks for missing
+installation settings. You can supply some settings as flags and let the guided
+installer ask for the rest. Have these values ready:
 
 - The path to `bundle-app.zip` and the ADMIN saved connection name.
 - The new schema and its SQLcl saved-connection name.
@@ -394,8 +398,15 @@ occur during preparation, before target mutation. If replacing an existing saved
 connection, review the prompt; its backup is retained until success or cleanup.
 Protect the journal and terminal output as operational records.
 
-For repeatable parameter selection, this example still prompts for secrets and
-any omitted account details:
+If asked for an **Optional prerequisite SQL file**, leave it blank. The current
+installer does not accept custom prerequisite scripts; a DBA must run any
+approved custom preparation separately before INITIAL.
+
+### Supply settings on the command line
+
+Use this form when you already know the installation settings. It still prompts
+for passwords, the application administrator's contact address, and any required
+Builder account details. It is not an unattended installation.
 
 ```bash
 bash db/deployer/install_mc_bundle.sh \
@@ -423,6 +434,49 @@ For a shared database, use `EXISTING` and arrange prerequisite approval
 with its DBA rather than copying the `NEW` choice above.
 INITIAL `--dry-run` previews the phases without creating the schema or importing
 APEX; it cannot prove OCI access or database compilation.
+
+### INITIAL command options
+
+The following settings must be supplied on the command line when you omit
+`--interactive`. In guided mode, missing values are requested at prompts.
+The journal is required for a real installation, but may be omitted for a preview.
+
+| Option | Meaning |
+| --- | --- |
+| `--mode INITIAL` | Select a new installation. Use UPDATE only for an already installed target. |
+| `--bundle FILE` | Path to the supplied `bundle-app.zip`. Keep it zipped. |
+| `--admin-connection NAME` | Existing SQLcl saved connection for database ADMIN, such as `TARGET_ADMIN`. |
+| `--target-connection-name NAME` | Saved connection the installer creates for the new application schema, such as `MC_TARGET`. It must differ from the ADMIN connection name. If that name already exists, the installer asks before replacing it. |
+| `--schema OWNER` | New application schema to create. It must not already exist. |
+| `--confirm-create-schema OWNER` | Repeat the schema name exactly to confirm creation. This is a confirmation, not a second schema. |
+| `--workspace NAME` | APEX workspace name to create or reuse. |
+| `--workspace-mode CREATE\|EXISTING` | `CREATE` creates a new workspace; `EXISTING` maps the new schema to an existing workspace and preserves its administrator accounts. |
+| `--first-admin USERNAME` | New local APEX end-user account that becomes the first MetisCloud Administrator. This is separate from the workspace Builder administrator. |
+| `--apex-offset AUTO\|NUMBER` | Component-ID offset for the APEX import. Use `AUTO` for a new installation. A fixed non-negative number is for a deliberately planned import; this is separate from the application ID. |
+| `--journal-directory PATH` | New absolute private directory for persistent recovery records. Its parent must exist. See [journal preparation](#prepare-the-installation-journal). |
+
+The remaining options control the installation choices or supply advanced settings:
+
+| Option | Default or behavior when omitted |
+| --- | --- |
+| `--interactive` | Without it, required installation settings above must be provided as flags. Password and account-detail prompts still occur during a real run. |
+| `--database-mode NEW\|EXISTING` | A real run asks when omitted and offers `EXISTING` as the default. A preview defaults to `EXISTING`. Choose `NEW` only to authorize database-wide prerequisite configuration on a new dedicated database. This option does not provision a database. |
+| `--target-app-id ID` | Defaults to the application ID recorded in the bundle. Specify an unused positive ID explicitly, such as `2300`, to control the installed identity. |
+| `--workspace-admin USERNAME` | Prompted when creating a workspace. The identity must suit the detected Builder authentication. Use only with `--workspace-mode CREATE`; it must differ from `--first-admin`. |
+| `--default-tablespace NAME` | Defaults to `DATA`. The permanent tablespace must already exist and be online. |
+| `--temporary-tablespace NAME` | Defaults to `TEMP`. The temporary tablespace must already exist and be online. |
+| `--dry-run` | Preview the installation phases. Omit it to install. A preview does not create the target, validate live connectivity or prove successful compilation. |
+| `--help` | Print the command summary and exit. |
+
+Append `--dry-run` to the parameterized example to preview those settings. After
+review, run the same command without `--dry-run` to install. Keep the same
+chosen identities and use a new journal directory for the real attempt.
+
+Use `--admin-connection` and `--target-connection-name` for INITIAL;
+`--connection` selects the existing target for UPDATE. INITIAL applies its
+required schema grants automatically, so `--apply-missing-grants` is unnecessary.
+Although the command summary lists `--environment-prerequisites`, the current
+INITIAL path rejects custom prerequisite SQL files; leave that option unset.
 
 ## Check the result
 

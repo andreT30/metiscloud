@@ -1,12 +1,14 @@
 # Target installer
 
 Run this tool from the repository root after reading [Installation](../../docs/installation.md).
+The [INITIAL options reference](../../docs/installation.md#initial-command-options)
+explains each setting, default and prompt.
 It is a self-contained Bash script with embedded bundle validation. No separate
 validation library, development checkout or ADMIN helper is needed.
 
 ```bash
 bash db/deployer/install_mc_bundle.sh --help
-bash db/deployer/install_mc_bundle.sh --interactive
+bash db/deployer/install_mc_bundle.sh --mode INITIAL --interactive
 ```
 
 Supported modes:

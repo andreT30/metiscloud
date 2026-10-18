@@ -14,6 +14,8 @@ before updating an installation.
 - Recommended Autonomous AI Lakehouse and added generic IAM and SQLcl examples,
   persistent recovery-journal guidance and restricted-user verification.
 - Removed redundant guides and updated navigation. The application bundle is unchanged.
+- Explained INITIAL command options, defaults and prompts, including the
+  distinction between guided input and parameterized installation.
 
 ## 26.10.18.02 - Initial public baseline
 
