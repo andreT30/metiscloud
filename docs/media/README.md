@@ -7,12 +7,12 @@ guides and in-app help take precedence over older labels and behavior.
 
 ## Watch or download
 
-[Watch the product overview on GitLab](https://gitlab.com/andreT30/metiscloud/-/blob/main/docs/media/metiscloud-product-overview.mp4).
+[Watch the product overview in your browser](https://gitlab.com/andreT30/metiscloud/-/raw/main/docs/media/metiscloud-product-overview.mp4?ref_type=heads).
 Download the MP4 from
 [GitHub](https://github.com/andreT30/metiscloud/raw/refs/heads/main/docs/media/metiscloud-product-overview.mp4)
 or [GitLab](https://gitlab.com/andreT30/metiscloud/-/raw/main/docs/media/metiscloud-product-overview.mp4?inline=false).
-The GitLab player can be opened from either repository host. GitHub's repository
-file view does not play this MP4. In a downloaded distribution, open
+The watch link opens the MP4 directly, without the repository file viewer.
+In a downloaded distribution, open
 [the local video file](metiscloud-product-overview.mp4) with your media player.
 
 The overview is 4 minutes 50 seconds, 1920×1080 H.264/AAC, approximately 25 MiB.

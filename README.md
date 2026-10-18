@@ -18,15 +18,15 @@ OCI Generative AI features provide conversational analysis and page-help assista
 
 ## See it in action
 
-[![MetisCloud Home dashboard. Select to watch the product overview on GitLab.](docs/media/home-demo.png)](https://gitlab.com/andreT30/metiscloud/-/blob/main/docs/media/metiscloud-product-overview.mp4)
+[![MetisCloud Home dashboard. Select to watch the product overview in your browser.](docs/media/home-demo.png)](https://gitlab.com/andreT30/metiscloud/-/raw/main/docs/media/metiscloud-product-overview.mp4?ref_type=heads)
 
-[Watch the product overview on GitLab](https://gitlab.com/andreT30/metiscloud/-/blob/main/docs/media/metiscloud-product-overview.mp4)
+[Watch the product overview](https://gitlab.com/andreT30/metiscloud/-/raw/main/docs/media/metiscloud-product-overview.mp4?ref_type=heads)
 or [download the MP4](https://github.com/andreT30/metiscloud/raw/refs/heads/main/docs/media/metiscloud-product-overview.mp4)
 (MP4, 4 minutes 50 seconds, approximately 25 MiB).
 The tour uses owner-approved demo data and covers dashboards, Analysis, Metis Bot,
-OCI Tools, topology, availability and administration. GitHub's repository file
-view does not play this video; use the GitLab player or download it and open it
-locally. You can also browse the [screenshots](docs/media/README.md#screenshots).
+OCI Tools, topology, availability and administration. The watch link opens the
+MP4 directly in your browser. You can also download it for local playback or
+browse the [screenshots](docs/media/README.md#screenshots).
 The recording is from
 September 2026; current guides and in-app help take precedence over older labels.
 
