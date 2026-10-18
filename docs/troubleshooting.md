@@ -127,7 +127,8 @@ first failing step, sanitized error and reproducible steps. Never publish
 wallets, credentials, connection definitions, customer identifiers, private
 URLs, raw prompts/results or complete runtime logs.
 
-Use [GitHub Issues](https://github.com/andreT30/metiscloud/issues) for non-sensitive
-defects and [SECURITY.md](../SECURITY.md) for vulnerabilities. If the safe
-correction is unknown, stop rather than granting broad access or modifying
+Use [GitHub Issues](https://github.com/andreT30/metiscloud/issues) or
+[GitLab Issues](https://gitlab.com/andreT30/metiscloud/-/issues) for non-sensitive
+defects on your preferred host, and [SECURITY.md](../SECURITY.md) for vulnerabilities.
+If the safe correction is unknown, stop rather than granting broad access or modifying
 bundle SQL.

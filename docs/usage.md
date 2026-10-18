@@ -49,6 +49,8 @@ once, then ask the administrator to inspect ingestion if the problem persists.
 
 ## Analysis: investigate a change
 
+![Analysis cost chart and pivot using approved demo data](media/analysis-cost-demo.jpg)
+
 1. Select currency, billing account, workload, daily/weekly/monthly granularity
    and the period. The latest selectable date is two days before today.
 2. Add Advanced Filters only as needed: environment, region, tenancy, service,
@@ -68,6 +70,8 @@ The 730-hour projection uses the recent 30-day cost rate. Missing budget or
 comparison data does not mean zero.
 
 ### Compare usage quantities
+
+![Daily usage grouped by service, SKU and unit using approved demo data](media/analysis-daily-usage-demo.jpg)
 
 Open Daily Usage with the intended scope. Read category, charge description, SKU
 and unit together. Do not add CPU time, storage and requests into one quantity.
@@ -123,6 +127,8 @@ tag changes. Table search narrows loaded rows without rerunning the report.
 A report workload does not change OCI resources or grant access to other data.
 
 ## Availability Metrics: interpret the evidence
+
+![Availability metric cards and timelines using approved demo data](media/availability-metrics-demo.png)
 
 Choose region, workload, namespace and a 7-, 30-, 60-day or custom window.
 Custom windows are limited to 89 days and 20,000 intervals.
@@ -188,6 +194,6 @@ resource need not yet have cost in the chosen period.
 A page error is different from a valid empty result. Do not repeatedly queue
 jobs to fix a display problem. Follow [Troubleshooting](troubleshooting.md).
 
-The [five-minute product tour](media/metiscloud-product-overview.mp4) uses approved
+The [five-minute product tour](media/README.md#watch-or-download) uses approved
 demo data. It was recorded in September 2026; current labels and workflows take
 precedence over the recording.

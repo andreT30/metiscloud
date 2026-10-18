@@ -308,8 +308,13 @@ saved connection. Do not substitute SQL*Plus for SQLcl.
 
 ## Get the distribution
 
-Open the [MetisCloud repository](https://github.com/andreT30/metiscloud), select
-**Code → Download ZIP**, and extract the download into a working directory.
+Download the repository as a ZIP from either host:
+
+- [GitHub](https://github.com/andreT30/metiscloud): select **Code → Download ZIP**.
+- [GitLab](https://gitlab.com/andreT30/metiscloud): select **Code**, then choose
+  **zip** under **Source code**.
+
+Extract the download into a working directory.
 Alternatively, clone the repository if you already use Git. Git is not required
 to run the installer.
 

@@ -2,8 +2,9 @@
 
 ## Report a security concern
 
-Use this repository's [GitHub Issues](https://github.com/andreT30/metiscloud/issues)
-to report a concern. If you suspect a vulnerability, open an issue asking for
+Use [GitHub Issues](https://github.com/andreT30/metiscloud/issues) or
+[GitLab Issues](https://gitlab.com/andreT30/metiscloud/-/issues) on the host where
+you follow the project. If you suspect a vulnerability, open an issue asking for
 private follow-up. Include only the affected version and a general description;
 keep reproduction steps, exploit details and sensitive evidence out of the
 public issue. The maintainer can arrange a private reporting channel.
@@ -45,4 +46,5 @@ See the [deployment security guide](docs/security.md) and
 [user access guide](docs/access-control.md) for configuration responsibilities.
 
 For ordinary bugs without a security impact, use
-[GitHub Issues](https://github.com/andreT30/metiscloud/issues).
+[GitHub Issues](https://github.com/andreT30/metiscloud/issues) or
+[GitLab Issues](https://gitlab.com/andreT30/metiscloud/-/issues).

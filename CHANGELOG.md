@@ -18,6 +18,8 @@ before updating an installation.
   distinction between guided input and parameterized installation.
 - Clarified DBA ownership of schema backup and recovery, APEX reinstallation
   requirements and checks before returning to service.
+- Added selected demo screenshots, linked video playback through GitLab with
+  a direct MP4 download, and documented issue reporting and contributions on both hosts.
 
 ## 26.10.18.02 - Initial public baseline
 

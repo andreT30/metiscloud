@@ -18,13 +18,16 @@ OCI Generative AI features provide conversational analysis and page-help assista
 
 ## See it in action
 
-[![MetisCloud Home dashboard. Select to open the product overview video.](docs/media/home-demo.png)](docs/media/metiscloud-product-overview.mp4)
+[![MetisCloud Home dashboard. Select to watch the product overview on GitLab.](docs/media/home-demo.png)](https://gitlab.com/andreT30/metiscloud/-/blob/main/docs/media/metiscloud-product-overview.mp4)
 
-[Watch the five-minute product overview](docs/media/metiscloud-product-overview.mp4)
+[Watch the product overview on GitLab](https://gitlab.com/andreT30/metiscloud/-/blob/main/docs/media/metiscloud-product-overview.mp4)
+or [download the MP4](https://github.com/andreT30/metiscloud/raw/refs/heads/main/docs/media/metiscloud-product-overview.mp4)
 (MP4, 4 minutes 50 seconds, approximately 25 MiB).
 The tour uses owner-approved demo data and covers dashboards, Analysis, Metis Bot,
-OCI Tools, topology, availability and administration. If your repository viewer
-does not play it, download the MP4 and open it locally. The recording is from
+OCI Tools, topology, availability and administration. GitHub's repository file
+view does not play this video; use the GitLab player or download it and open it
+locally. You can also browse the [screenshots](docs/media/README.md#screenshots).
+The recording is from
 September 2026; current guides and in-app help take precedence over older labels.
 
 ## What you can do
@@ -91,7 +94,8 @@ network restrictions, backups and optional AI data sharing. Review the
 
 Report vulnerabilities through [SECURITY.md](SECURITY.md). Do not post credentials,
 customer information or raw logs in public issues. For ordinary defects and
-documentation suggestions, use [GitHub Issues](https://github.com/andreT30/metiscloud/issues).
+documentation suggestions, use [GitHub Issues](https://github.com/andreT30/metiscloud/issues)
+or [GitLab Issues](https://gitlab.com/andreT30/metiscloud/-/issues) on your preferred host.
 See [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change.
 
 ## License

@@ -1,6 +1,6 @@
 # MetisCloud documentation
 
-New to MetisCloud? Watch the [product overview](media/metiscloud-product-overview.mp4),
+New to MetisCloud? Watch the [product overview](media/README.md#watch-or-download),
 then use the path that matches your role. The [page directory](pages-and-help.md)
 explains what each area does and where to find detailed help inside the application.
 

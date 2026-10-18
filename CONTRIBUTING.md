@@ -6,8 +6,10 @@ agree on its scope before you spend time on it.
 
 ## Report a bug
 
-Search [existing issues](https://github.com/andreT30/metiscloud/issues) first.
-If you do not find the problem, open an issue with:
+Use the issue tracker on the host where you follow the project:
+[GitHub Issues](https://github.com/andreT30/metiscloud/issues) or
+[GitLab Issues](https://gitlab.com/andreT30/metiscloud/-/issues).
+Search existing reports first. If you do not find the problem, open an issue with:
 
 - Your MetisCloud version and the page or command involved.
 - Steps to reproduce the problem.
@@ -29,7 +31,7 @@ Application feature requests are welcome as issues. This repository contains
 the installable distribution, deployment scripts and guides; application
 development source is maintained separately.
 
-## Submit a pull request
+## Submit a pull request or merge request
 
 1. Fork the repository and create a branch for one focused change.
 2. Make the change and update any affected instructions or examples.
@@ -39,15 +41,16 @@ development source is maintained separately.
    bash -n db/deployer/install_mc_bundle.sh
    ```
 
-4. Open a pull request explaining the problem, your change and the checks you ran.
+4. Open a pull request on GitHub or a merge request on GitLab, using the same
+   host as your fork. Explain the problem, your change and the checks you ran.
    Link the related issue if there is one.
 
 Keep examples runnable with clearly marked placeholders. Avoid unrelated
-formatting or cleanup in the same pull request.
+formatting or cleanup in the same contribution.
 
 Please do not include replacement bundles or unpacked application/database
-source in a pull request. Discuss release-artifact changes with the maintainer
-first. A syntax check does not prove deployment behavior; explain which changes
+source in a pull request or merge request. Discuss release-artifact changes with
+the maintainer first. A syntax check does not prove deployment behavior; explain which changes
 you tested and which still need a disposable database environment.
 
 If you test against a database, use an environment you are authorized to change.
