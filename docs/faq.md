@@ -22,8 +22,8 @@ for application issues; do not assume an Oracle product-support entitlement.
 ## What infrastructure do I need?
 
 Oracle Autonomous Database with managed APEX, approved OCI IAM access, network
-connectivity and an operator workstation with SQLcl and Bash. See
-[Infrastructure](infrastructure.md) and the full [requirements](prerequisites.md).
+connectivity and an operator workstation with SQLcl and Bash. The
+[installation guide](installation.md) covers database selection and preparation.
 The installer does not create the database. Self-managed Database/APEX/ORDS is
 outside the documented deployment path.
 
@@ -42,7 +42,7 @@ Follow [Configuration](configuration.md) when ready.
 
 ## Does a successful installation mean my data is ready?
 
-No. INITIAL installs the application. [Setup](first-use.md) configures the target
+No. INITIAL installs the application. [Setup](configuration.md) configures the target
 and starts collection. The latest 15 days load first; older history can take
 hours. A 100% display with Final processing still means work is running.
 Check results before enabling recurring jobs.

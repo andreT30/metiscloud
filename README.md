@@ -45,31 +45,12 @@ provider reports and your accounting controls.
 
 The supported deployment path is Oracle Autonomous Database with managed APEX,
 using a public or private endpoint. You need OCI IAM and database administration
-access for preparation, plus Bash, Oracle SQLcl and the tools listed in
-[requirements](docs/prerequisites.md). Check database and APEX compatibility
-before provisioning or installing.
+access for preparation, plus Bash and Oracle SQLcl on the installer workstation.
 
-1. Read the [infrastructure overview](docs/infrastructure.md) and complete the
-   [environment preparation](docs/prerequisites.md).
-2. [Download the distribution](docs/installation.md#get-the-distribution), keeping
-   the bundle and checksum together. From the
-   repository root, verify them:
-
-   ```bash
-   shasum -a 256 -c bundle-app.zip.sha256
-   ```
-
-   Use `sha256sum -c bundle-app.zip.sha256` where `shasum` is unavailable.
-   Stop if the checksum check fails. The installer also validates the bundle
-   before applying it. Obtain both files from a trusted source.
-3. Follow [installation](docs/installation.md), starting the guided installer:
-
-   ```bash
-   bash db/deployer/install_mc_bundle.sh --interactive
-   ```
-
-4. Complete [first sign-in and Setup](docs/first-use.md), check one known report,
-   then [grant user access](docs/access-control.md).
+1. [Install MetisCloud](docs/installation.md): choose the database, prepare
+   networking and IAM, install SQLcl, verify the distribution and run INITIAL.
+2. [Set up and configure MetisCloud](docs/configuration.md): sign in, complete
+   Setup, load data, verify a report and grant user access. AI and email are optional.
 
 For an existing installation, follow [Upgrade](docs/upgrade.md), including the
 backup checkpoint and configuration replacement rules. Do not run INITIAL over
@@ -81,9 +62,8 @@ Start at the [documentation guide](docs/README.md) for an ordered reading path.
 
 | I want to… | Guide |
 | --- | --- |
-| Plan the database, networks and service access | [Infrastructure](docs/infrastructure.md) and [requirements](docs/prerequisites.md) |
-| Install and load my first data | [Installation](docs/installation.md) and [Setup](docs/first-use.md) |
-| Configure AI, email or application settings | [Configuration](docs/configuration.md) |
+| Prepare infrastructure and install the application | [Install MetisCloud](docs/installation.md) |
+| Load my first data or change application settings | [Set up and configure MetisCloud](docs/configuration.md) |
 | Understand administrators, groups and workload access | [Access control](docs/access-control.md) and [security responsibilities](docs/security.md) |
 | Find a page or learn its controls | [Page overview and in-app help](docs/pages-and-help.md) |
 | Analyse costs and use reports | [User guide](docs/usage.md) |
@@ -100,8 +80,8 @@ development repository, deployment credentials and runtime data are not included
 
 [VERSION](VERSION) identifies the bundled application version.
 [CHANGELOG.md](CHANGELOG.md) records distribution changes, starting with the
-first public baseline. Follow [deployment verification](docs/deployment-verification.md)
-for your environment before admitting users.
+first public baseline. Verify [reporting](docs/configuration.md#verify-the-first-load)
+and [user access](docs/configuration.md#give-other-users-access) before admitting users.
 
 ## Security and support
 

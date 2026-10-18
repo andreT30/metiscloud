@@ -62,4 +62,5 @@ After restore, keep traffic controlled while you:
 5. Resume approved schedules, monitor their next run, then reopen access.
 
 Record the recovered cutoff, lost transactions and elapsed recovery time.
-See [deployment verification](deployment-verification.md) for recovery and access checks.
+Use the configuration guide to verify [reporting](configuration.md#verify-the-first-load)
+and [user access](configuration.md#give-other-users-access) after recovery.

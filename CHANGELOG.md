@@ -8,13 +8,12 @@ before updating an installation.
 
 ### Documentation
 
-- Added database preparation steps, generic IAM and SQLcl connection examples,
-  and checks before installation.
-- Clarified distribution download, schema creation, first application access,
-  Setup inputs and restricted-user verification. The application bundle is unchanged.
-- Recommended Autonomous AI Lakehouse, added current SQLcl installation guidance
-  and a complete reporting-policy example, and explained persistent recovery-journal storage.
-- Replaced deployment checklists with a verification guide.
+- Consolidated infrastructure, requirements and INITIAL instructions into
+  Install MetisCloud, and combined first sign-in, Setup and settings into
+  Set up and configure MetisCloud. Verification steps are included where needed.
+- Recommended Autonomous AI Lakehouse and added generic IAM and SQLcl examples,
+  persistent recovery-journal guidance and restricted-user verification.
+- Removed redundant guides and updated navigation. The application bundle is unchanged.
 
 ## 26.10.18.02 - Initial public baseline
 
@@ -45,5 +44,5 @@ The legacy Table Helper shortcut has no standalone destination. Use
 **Dataset Configuration → Source** for table metadata and
 **Advanced Diagnostics → Native Schema Probe** for schema investigation.
 
-Read the [requirements](docs/prerequisites.md) and follow
-[deployment verification](docs/deployment-verification.md) for your environment.
+Follow [Installation](docs/installation.md) and
+[Set up and configure MetisCloud](docs/configuration.md) for your environment.

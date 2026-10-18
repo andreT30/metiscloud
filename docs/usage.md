@@ -1,5 +1,8 @@
 # Use MetisCloud
 
+After an administrator completes [Setup](configuration.md#complete-setup) and
+assigns your access, start with a reporting period covered by a successful load.
+
 For a high-level directory and the **?** help button or page-help widget, start
 with [Pages and in-app help](pages-and-help.md).
 

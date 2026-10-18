@@ -4,22 +4,17 @@ New to MetisCloud? Watch the [product overview](media/metiscloud-product-overvie
 then use the path that matches your role. The [page directory](pages-and-help.md)
 explains what each area does and where to find detailed help inside the application.
 
-## Install an environment
+## Install and set up
 
-1. [Infrastructure](infrastructure.md): provision the database and check access paths.
-2. [Requirements and preparation](prerequisites.md): check compatibility, IAM,
-   network access and workstation tools.
-3. [Installation](installation.md): download the distribution, verify the bundle,
-   run INITIAL and locate the installed application.
-4. [First sign-in and Setup](first-use.md): configure the target, load data and
-   check a report against its source.
-5. [Access control](access-control.md): assign roles and workloads, then test access.
-6. [Deployment verification](deployment-verification.md): verify reporting, access
-   and maintenance in your environment.
+1. [Install MetisCloud](installation.md): prepare the database, networks, IAM and
+   SQLcl connection; download and verify the distribution; run INITIAL and open
+   the installed application.
+2. [Set up and configure MetisCloud](configuration.md): sign in as the first
+   administrator, complete Setup, verify the first load, add users and enable
+   recurring work. The same guide covers optional AI/email and later settings changes.
 
-The installer does not provision the Autonomous Database. Arrange that first
-with your OCI administrator. AI and email are optional; enable them only after
-their access and data-handling requirements are approved.
+Each guide has a contents list for returning to a particular step. For an existing
+installation, use [Upgrade](upgrade.md).
 
 ## Use the application
 
@@ -32,7 +27,7 @@ their access and data-handling requirements are approved.
 
 | Task | Guide |
 | --- | --- |
-| Change target settings, AI or email | [Configuration](configuration.md) |
+| Change target settings, AI or email | [Set up and configure MetisCloud](configuration.md) |
 | Manage roles, groups and workload assignments | [Access control](access-control.md) |
 | Manage schedules, loads, workloads and email queues | [Administration](administration.md) |
 | Maintain assistant datasets, models and diagnostics | [Assistant administration](assistant-administration.md) |
@@ -50,7 +45,6 @@ upgrade guides give the steps and checks.
 ## Release and project information
 
 - [Version](../VERSION) and [changelog](../CHANGELOG.md).
-- [Deployment verification](deployment-verification.md).
 - [License](../LICENSE), [third-party notices](../THIRD_PARTY_NOTICES.md),
   [vulnerability reporting](../SECURITY.md) and [contributing](../CONTRIBUTING.md).
 

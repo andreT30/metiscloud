@@ -2,7 +2,7 @@
 
 Administrators maintain access, workloads, configuration, schedules and data
 freshness. OCI and database administrators own platform access, IAM and recovery.
-Complete [First use](first-use.md) before enabling recurring work.
+Complete [Setup and initial verification](configuration.md) before enabling recurring work.
 
 Open Administration in the navigation menu, then App Config for the settings,
 user access, workload, scheduler, email and load-monitoring tabs described below.
@@ -64,7 +64,7 @@ Validate cost and membership in Analysis. Names cannot be renamed in place.
 Before deleting a workload, revoke individual assignments and check reports that
 depend on it. Deletion is permanent.
 
-Use [User access](first-use.md#give-other-users-access) to assign workloads to
+Use [User access](configuration.md#give-other-users-access) to assign workloads to
 people. Do not confuse report definitions with authorization.
 
 ## Email queue
