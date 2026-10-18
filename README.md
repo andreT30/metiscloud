@@ -53,8 +53,8 @@ access for preparation, plus Bash and Oracle SQLcl on the installer workstation.
    Setup, load data, verify a report and grant user access. AI and email are optional.
 
 For an existing installation, follow [Upgrade](docs/upgrade.md), including the
-backup checkpoint and configuration replacement rules. Do not run INITIAL over
-an installed application schema.
+DBA-managed schema backup and configuration replacement rules. Do not run INITIAL
+over an installed application schema.
 
 ## Documentation
 

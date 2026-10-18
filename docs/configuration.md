@@ -212,8 +212,8 @@ their field values. Protected settings, including `ENDPOINT` and
 `FIRST_SETUP_RUN`, cannot be changed there. There is no
 customer action to add arbitrary keys. Do not bypass these controls with SQL.
 
-Before a significant configuration change, take a recoverable checkpoint using
-[Backup and recovery](backup-and-recovery.md).
+Before a significant configuration change, arrange a recoverable schema backup
+with the DBA; see [Backup and recovery](backup-and-recovery.md).
 
 ## Target settings
 

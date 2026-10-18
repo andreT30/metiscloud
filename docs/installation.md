@@ -115,7 +115,7 @@ optional AI or email usage. Application licensing does not cover service charges
 Avoid assuming a free or restricted service tier satisfies the database
 capabilities listed in [database compatibility](#database-compatibility).
 
-Decide who owns recovery and rehearse a restore before production reliance.
+Have the DBA arrange schema backups and a tested schema recovery procedure.
 The bundle is not a backup of your data, IAM policies or identity-provider settings.
 Follow [backup and recovery](backup-and-recovery.md).
 

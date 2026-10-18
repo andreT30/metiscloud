@@ -82,8 +82,8 @@ to choose a workspace, and the [user guide](usage.md) for reporting examples.
 ## Can I update from inside the application?
 
 Administrators can use **Import / Update App** with a verified supplied bundle.
-Review the plan and take a recovery checkpoint first. The UI cannot perform
-INITIAL into an empty environment. See [Upgrade](upgrade.md).
+Review the plan and arrange a schema backup with the DBA first. The UI cannot
+perform INITIAL into an empty environment. See [Upgrade](upgrade.md).
 
 ## Will an update keep my settings?
 
@@ -96,8 +96,10 @@ and your customizations before applying it.
 ## Is the bundle a backup? Can I roll back with an older ZIP?
 
 No. A bundle contains application definitions, not a recoverable copy of your
-data and environment. Installing an older ZIP is not rollback. Prepare and test
-the [backup and recovery procedure](backup-and-recovery.md).
+data and environment. Schema backup and recovery are the DBA's responsibility.
+The APEX application can be reimported from a compatible release, but INITIAL
+cannot run over an existing schema. Installing an older ZIP is not rollback.
+See [Backup and recovery](backup-and-recovery.md).
 
 ## What should I send when reporting a problem?
 

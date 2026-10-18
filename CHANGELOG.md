@@ -16,6 +16,8 @@ before updating an installation.
 - Removed redundant guides and updated navigation. The application bundle is unchanged.
 - Explained INITIAL command options, defaults and prompts, including the
   distinction between guided input and parameterized installation.
+- Clarified DBA ownership of schema backup and recovery, APEX reinstallation
+  requirements and checks before returning to service.
 
 ## 26.10.18.02 - Initial public baseline
 

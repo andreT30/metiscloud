@@ -8,7 +8,7 @@ through an older installer or manually replace database packages.
 ## Before changing the target
 
 1. Read the [changelog](../CHANGELOG.md).
-2. Prepare a tested [recovery checkpoint](backup-and-recovery.md).
+2. Have the DBA prepare a recoverable [schema backup](backup-and-recovery.md).
 3. Verify the bundle against its supplied checksum, obtained from a trusted source.
 4. Schedule a maintenance window. Record application version, target app ID,
    workspace, offset, authentication and scheduler states privately.

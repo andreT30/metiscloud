@@ -33,14 +33,14 @@ installation, use [Upgrade](upgrade.md).
 | Maintain assistant datasets, models and diagnostics | [Assistant administration](assistant-administration.md) |
 | Review security boundaries and retention | [Security](security.md) |
 | Install a later supplied bundle | [Upgrade](upgrade.md) |
-| Prepare a checkpoint or recover | [Backup and recovery](backup-and-recovery.md) |
+| Arrange schema backup or recover | [Backup and recovery](backup-and-recovery.md) |
 | Clean up failed INITIAL or uninstall | [Recovery and removal](recovery-and-removal.md) |
 | Investigate failures | [Troubleshooting](troubleshooting.md) |
 
 For routine operation, check load results and failed jobs, review access changes,
-and investigate email or assistant failures. Before maintenance, agree a recovery
-checkpoint and a window that does not overlap ingestion. The administration and
-upgrade guides give the steps and checks.
+and investigate email or assistant failures. Before maintenance, arrange a schema
+backup with the DBA and a window that does not overlap ingestion. The
+administration and upgrade guides give the steps and checks.
 
 ## Release and project information
 
