@@ -35,6 +35,7 @@ September 2026; current guides and in-app help take precedence over older labels
 - Investigate cost and usage by service, compartment, workload, resource and period.
 - Track subscription credits, spending trends, forecasts and workload budgets.
 - Explore OCI inventory, tags, compartment hierarchies and resource relationships.
+- Review OCI service limits, utilization and available quantities as an administrator.
 - Save reporting views and download results for further analysis.
 - Review collected availability metrics with their coverage and freshness limits.
 - Ask questions of approved datasets or reference files through the optional Bot.

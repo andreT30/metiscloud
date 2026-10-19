@@ -27,7 +27,7 @@ or replace the confirmation shown before a destructive action.
 | --- | --- | --- |
 | Home | Subscription credit health, forecasts and recent workload spending. | Administrators and Contributors. |
 | Analysis | Cost and usage investigation by period, workload, service, compartment and resource; includes reporting downloads. | Administrators, Contributors and Users within their allowed scope. |
-| OCI Tools | Resource inventory, analytics/topology, policies, compartments and price comparison. | Administrators and Contributors; Users have permitted workload-scoped views. Ratecard and Load Policies are administrator-only. |
+| OCI Tools | Resource inventory, analytics/topology, policies, compartments, price comparison and service limits/usage. | Administrators and Contributors; Users have permitted workload-scoped views. Ratecard, Load Policies and Limits & Usage are administrator-only. |
 | My Reports | Saved reporting scopes and recurring cost comparisons. Saved items belong to their creator. | Users with the required workload access, Contributors and Administrators. |
 | Availability Metrics | Collected metric health, trends and coverage for the selected scope. Missing metrics alone do not prove an outage. | Users with reviewed workload access, Contributors and Administrators. |
 | MetisCloud Chat / Metis Bot | Analytics questions against approved datasets, or Generic assistance with optional approved reference files. | Administrators and Contributors with configured assistant access. |

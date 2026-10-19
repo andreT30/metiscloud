@@ -211,6 +211,7 @@ explains the access included in `inspect` and `read`.
 | Inventory | Inspect/read selected compartments and resource types across the intended regions. |
 | Subscription/credits | Read the relevant subscription and usage data. |
 | Availability | Read required Monitoring metrics and resource metadata. |
+| Limits & Usage | Read service-limit definitions, values and resource-availability data for the approved tenancy and regions. |
 | AI (optional) | Invoke an approved model/service in the selected region and compartment. |
 | Email (optional) | Discover configuration and send using an approved sender in its compartment. |
 | Scaling/operational actions (optional) | Separate, explicitly approved permissions, not prerequisites for ordinary reporting. |

@@ -115,6 +115,26 @@ starts ingestion and requires administrator permission. It is not a display
 refresh. Ask an administrator to investigate missing collection before starting
 another load.
 
+### Limits and usage
+
+Administrators can open **OCI Tools → Limits & Usage** to review the configured
+tenancy's service limits, used and available quantities, utilization and latest
+completed refresh date. Search by service, description or limit identifier, then
+filter by service, scope, region, availability domain, utilization or collection
+status. Global limits remain visible when a region or availability domain is selected.
+
+Select a row and expand **Selected limit details** for its returned metadata.
+OCI does not supply usage or available quantities for every limit; a dash means
+the value is unavailable. Complete all-zero values show N/A and do not indicate
+exhaustion. Read the status text alongside the utilization indicator, including
+stale, failed or unassessable results. The **?** help explains each status.
+
+Collection runs nightly and rebuilds the snapshot. A failed rebuild preserves
+the previous snapshot and marks it stale; a snapshot older than 48 hours is also
+stale. **Refresh** reloads saved data without starting collection or changing
+OCI resources. Ask an administrator to inspect the **OCI Limits** job in
+**App Config → Scheduler** if data is stale or collection failed.
+
 ## My Reports: repeat a view
 
 Select a saved report, period, dates and granularity, then Apply. The chart,

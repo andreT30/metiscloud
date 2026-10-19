@@ -4,7 +4,20 @@ Public distribution changes start with this baseline. See [VERSION](VERSION)
 for the bundled application version and the [upgrade guide](docs/upgrade.md)
 before updating an installation.
 
-## Unreleased
+## 26.10.18.06 - OCI Limits
+
+### Added
+
+- **OCI Tools → Limits & Usage** for administrators to review service limits,
+  used and available quantities, utilization and collection status.
+- Search and filters for service, scope, region, availability domain and usage,
+  with details for each selected limit.
+- Nightly limits collection with snapshot freshness and failure reporting.
+  A failed rebuild preserves the previous snapshot and marks it stale.
+
+After installation or UPDATE, review OCI access and enable the new **OCI Limits**
+job when ready. Refreshing the page reads the saved snapshot; it does not start
+collection or change OCI resources. See the [user guide](docs/usage.md#limits-and-usage).
 
 ### Documentation
 
@@ -13,7 +26,7 @@ before updating an installation.
   Set up and configure MetisCloud. Verification steps are included where needed.
 - Recommended Autonomous AI Lakehouse and added generic IAM and SQLcl examples,
   persistent recovery-journal guidance and restricted-user verification.
-- Removed redundant guides and updated navigation. The application bundle is unchanged.
+- Removed redundant guides and updated navigation.
 - Explained INITIAL command options, defaults and prompts, including the
   distinction between guided input and parameterized installation.
 - Clarified DBA ownership of schema backup and recovery, APEX reinstallation

@@ -35,8 +35,8 @@ people the least privileged role that fits their work.
 
 The role names do not mean every page is available to every role. For example,
 Home and MetisCloud Chat are for Administrators and Contributors. OCI Tools
-offers permitted workload-scoped views to Users, but Ratecard and Load Policies
-require Administrator access. See the [page overview](pages-and-help.md).
+offers permitted workload-scoped views to Users, but Ratecard, Load Policies and
+Limits & Usage require Administrator access. See the [page overview](pages-and-help.md).
 
 ## Add an Oracle APEX Accounts user
 

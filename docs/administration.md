@@ -35,6 +35,12 @@ nightly ingestion or deployment. New application jobs start disabled; the intern
 installation recovery monitor is an exception. Retention/archive/expiry jobs need
 individual approval because they can remove data.
 
+The **OCI Limits** job collects the service-limit snapshot nightly. Review its
+OCI permissions and enable the new job after installation or UPDATE when ready.
+**OCI Tools → Limits & Usage → Refresh** only reloads saved data. If collection
+fails, the previous snapshot is retained and marked stale; inspect the job's
+run history before retrying. See [Limits and usage](usage.md#limits-and-usage).
+
 Editing a PL/SQL block or stored-procedure action uses the job owner's privileges.
 Require DBA review. The UI does not create or drop jobs.
 
