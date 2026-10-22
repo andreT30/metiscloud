@@ -13,22 +13,17 @@ before updating an installation.
 - Workload and search filters, source estimates in their recorded currency,
   recommendation/resource CSV downloads, and links to authorized inventory
   and matched resource cost history.
-- Daily **Cloud Advisor refresh** collection. A failed collection retains the
-  previous complete snapshot. The new job starts disabled.
+- Daily **Cloud Advisor refresh** collection, enabled by an administrator.
 
-### Changed
+### Documentation
 
-- Analysis retains the matched billing context when opened from Cloud Advisor,
-  including compartment and creation-date restrictions for supported bucket
-  matches. Ambiguous matches do not open an unfiltered report.
-- OCI Tools loads Cloud Advisor without waiting for the other tools' shared
-  startup requests. Resource details open from saved rows, with raw evidence
-  loaded on request.
+- Added Cloud Advisor guidance covering recommendations, estimates, resource
+  details, cost-history links and CSV downloads.
+- Updated installation, configuration, access-control, administration, upgrade,
+  FAQ and troubleshooting guides for Cloud Advisor.
 
-After installation or UPDATE, review Cloud Advisor enrollment, OCI read access
-and inventory freshness before enabling **Cloud Advisor refresh**. MetisCloud
-does not apply recommendations, record local decisions or claim realized
-savings. See [Cloud Advisor](docs/usage.md#cloud-advisor).
+See [Cloud Advisor](docs/usage.md#cloud-advisor) for usage and
+[Administration](docs/administration.md#schedules-and-running-jobs) for collection setup.
 
 ## 26.10.18.06 - OCI Limits
 
