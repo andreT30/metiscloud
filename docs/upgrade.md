@@ -98,6 +98,13 @@ results, load monitoring and intended job states. Existing scheduler states are
 retained and new application jobs remain disabled; review them before resuming
 maintenance-paused schedules. Test optional AI/email separately when enabled.
 
+For **26.10.22.03**, review the new **Cloud Advisor refresh** job before enabling
+it. Verify recommendations with an Administrator and a restricted User, including
+the resource and cost-history links. Unmatched billing identities must show an
+unavailable/ambiguous message rather than a broader report. Follow the
+[collection guidance](administration.md#schedules-and-running-jobs) and
+[Cloud Advisor guide](usage.md#cloud-advisor).
+
 Review Bot parameters and semantic readiness after the seed step. Test a known
 question, an out-of-scope request and a restricted user's access. Check that
 target provider references remain correct and that changed prompts or guardrails

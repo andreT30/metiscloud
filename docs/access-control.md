@@ -38,6 +38,14 @@ Home and MetisCloud Chat are for Administrators and Contributors. OCI Tools
 offers permitted workload-scoped views to Users, but Ratecard, Load Policies and
 Limits & Usage require Administrator access. See the [page overview](pages-and-help.md).
 
+Cloud Advisor follows current resource access. Administrators can inspect its
+triage records; Contributors see supported recommendations with matched inventory,
+and Users see only resources in their permitted workloads. Tenancy-wide estimates
+and recorded recommendation metadata are withheld from restricted views. Resource,
+cost-history and evidence requests check access again; a saved recommendation
+does not grant access to its resource. Cloud Advisor has no local decision or
+resource-change controls.
+
 ## Add an Oracle APEX Accounts user
 
 1. Have the APEX workspace administrator create the person's account and add it

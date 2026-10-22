@@ -135,6 +135,52 @@ stale. **Refresh** reloads saved data without starting collection or changing
 OCI resources. Ask an administrator to inspect the **OCI Limits** job in
 **App Config → Scheduler** if data is stale or collection failed.
 
+### Cloud Advisor
+
+Open **OCI Tools → Cloud Advisor** to review saved OCI recommendations. Select a
+recommendation type to see its affected resources, then select a resource name
+to open its details. The view is information-only: it does not apply changes,
+assign work or record acceptance, dismissal or implementation decisions.
+
+Search by recommendation type, resource name or identifier. In **Filters**,
+choose a permitted workload or include zero resource estimates, then **Apply
+filters**. Zero estimates are hidden by default; missing estimates remain
+visible. Close or Escape discards unapplied filter changes.
+
+Read estimates in their recorded currency. **OCI tenancy monthly estimate** is
+OCI's separate recommendation-level value, not the sum of the displayed
+resource estimates. It is available only to Administrators without workload or
+search filters. Contributors see supported recommendations matched to inventory;
+Users see only resources within their current workload access. Restricted views
+do not expose tenancy-wide estimates or counts.
+
+A missing estimate means OCI did not supply it. A recorded `-1` is shown as
+supplied; do not interpret it as a saving. One resource may have several
+recommendations, so adding estimates can double-count opportunities. Neither
+an estimate nor a recommendation's disappearance proves realized savings.
+
+Resource details show recorded OCPU and shape comparisons when supplied.
+**Recorded OCI response** loads saved evidence when expanded. **View resource**
+opens the authorized inventory view. **View cost history** opens Analysis only
+when a billing match can be established. Analysis retains the matched account,
+currency, region, service and resource; supported bucket matches also preserve
+compartment and creation-date boundaries. Missing or ambiguous matches show a
+message instead of opening a broader report. Changing or clearing the selected
+resource ends that Advisor context. Background Analysis file creation is not
+available for compartment-scoped bucket matches.
+
+**Export CSV** downloads the selected type's resources, or the recommendation
+summary when no type is selected. Resource results and downloads are limited to
+500 matching rows; narrow the search if the limit is reported. Summary counts
+are calculated before that limit. Files and raw evidence may contain resource
+identifiers and operational details; keep them in approved private storage.
+
+**Refresh saved recommendations** reloads the last complete collection without
+calling OCI. Failed collections retain that snapshot. If a new collection
+finishes while you are browsing, refresh before continuing. For missing or old
+data, ask an administrator to review the
+[Cloud Advisor refresh job](administration.md#schedules-and-running-jobs).
+
 ## My Reports: repeat a view
 
 Select a saved report, period, dates and granularity, then Apply. The chart,

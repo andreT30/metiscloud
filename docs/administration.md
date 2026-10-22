@@ -41,6 +41,16 @@ OCI permissions and enable the new job after installation or UPDATE when ready.
 fails, the previous snapshot is retained and marked stale; inspect the job's
 run history before retrying. See [Limits and usage](usage.md#limits-and-usage).
 
+The **Cloud Advisor refresh** job collects saved recommendations and evidence.
+It starts disabled and is supplied with a daily 05:00 schedule under the
+Scheduler's timezone. Before enabling it, confirm active OCI Cloud Advisor
+enrollment, the configured tenancy/home region, approved Optimizer read access
+and current inventory. The supplied collector supports commercial OCI regions;
+other realms require verified endpoint support. Page Refresh does not run the
+collector. A failed collection retains the previous complete snapshot; inspect
+job history before retrying. Collection reads OCI data and never applies
+recommendations. See [Cloud Advisor](usage.md#cloud-advisor).
+
 Editing a PL/SQL block or stored-procedure action uses the job owner's privileges.
 Require DBA review. The UI does not create or drop jobs.
 

@@ -4,6 +4,32 @@ Public distribution changes start with this baseline. See [VERSION](VERSION)
 for the bundled application version and the [upgrade guide](docs/upgrade.md)
 before updating an installation.
 
+## 26.10.22.03 - Cloud Advisor
+
+### Added
+
+- **OCI Tools → Cloud Advisor**, an information-only view of saved OCI
+  recommendations, grouped by type with affected resources and recorded evidence.
+- Workload and search filters, source estimates in their recorded currency,
+  recommendation/resource CSV downloads, and links to authorized inventory
+  and matched resource cost history.
+- Daily **Cloud Advisor refresh** collection. A failed collection retains the
+  previous complete snapshot. The new job starts disabled.
+
+### Changed
+
+- Analysis retains the matched billing context when opened from Cloud Advisor,
+  including compartment and creation-date restrictions for supported bucket
+  matches. Ambiguous matches do not open an unfiltered report.
+- OCI Tools loads Cloud Advisor without waiting for the other tools' shared
+  startup requests. Resource details open from saved rows, with raw evidence
+  loaded on request.
+
+After installation or UPDATE, review Cloud Advisor enrollment, OCI read access
+and inventory freshness before enabling **Cloud Advisor refresh**. MetisCloud
+does not apply recommendations, record local decisions or claim realized
+savings. See [Cloud Advisor](docs/usage.md#cloud-advisor).
+
 ## 26.10.18.06 - OCI Limits
 
 ### Added

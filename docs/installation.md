@@ -212,6 +212,7 @@ explains the access included in `inspect` and `read`.
 | Subscription/credits | Read the relevant subscription and usage data. |
 | Availability | Read required Monitoring metrics and resource metadata. |
 | Limits & Usage | Read service-limit definitions, values and resource-availability data for the approved tenancy and regions. |
+| Cloud Advisor | Read Optimizer recommendations, categories, resource actions, enrollment status and available history for the configured tenancy. Collection requires active Cloud Advisor enrollment; it does not apply recommendations. |
 | AI (optional) | Invoke an approved model/service in the selected region and compartment. |
 | Email (optional) | Discover configuration and send using an approved sender in its compartment. |
 | Scaling/operational actions (optional) | Separate, explicitly approved permissions, not prerequisites for ordinary reporting. |

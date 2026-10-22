@@ -97,6 +97,21 @@ compartment selection, tag keys and hierarchy refresh status. Partial topology
 coverage does not prove missing relationships. Missing availability metrics
 affect the headline calculation; they do not independently prove an outage.
 
+## Cloud Advisor is empty or out of date
+
+Check the last complete collection time, search, workload and zero-estimate
+filters first. Users see only their authorized resources; an Administrator's
+results can differ. Ask an administrator to inspect **Cloud Advisor refresh**
+in Scheduler Jobs. The new job starts disabled. Confirm active OCI Cloud Advisor
+enrollment, configured tenancy/home region, read permissions and inventory
+freshness before running it. Refreshing the page does not collect new data.
+
+A failed collection keeps the previous complete snapshot. Inspect the failed
+run rather than treating retained data as current. If the snapshot changed while
+browsing, refresh the list. Resource cost history needs an unambiguous billing
+match; do not bypass a missing/ambiguous-match message by removing access checks.
+See [Cloud Advisor](usage.md#cloud-advisor) for estimate and download limits.
+
 ## Assistant or spreadsheet functions fail
 
 For missing charts, icons, PDF or Excel output, inspect browser network failures

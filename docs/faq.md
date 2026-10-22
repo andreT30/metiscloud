@@ -67,6 +67,14 @@ Inventory and billing also come from different sources. Follow
 [reporting troubleshooting](troubleshooting.md#reporting-looks-wrong) before
 interpreting an empty result as zero cost.
 
+## Does Cloud Advisor change my OCI resources?
+
+No. It displays saved recommendations and recorded evidence, with links to
+authorized inventory and matched cost history. It does not implement changes or
+record local decisions. Estimates are OCI's supplied values, not proof of
+savings; overlapping recommendations must not be added into a portfolio total.
+See [Cloud Advisor](usage.md#cloud-advisor).
+
 ## Why does an alert remain after I read it?
 
 An active budget condition continues to count even after acknowledgment. The

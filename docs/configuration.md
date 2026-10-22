@@ -82,6 +82,11 @@ Setup initially configures the root tenancy. Add child-tenancy scope only after
 this path succeeds and IAM has been reviewed. Availability history accepts 1 to
 89 days. A planned SSO choice in Setup does not switch authentication for you.
 
+Cloud Advisor collection is separate from the initial reporting load. Its new
+**Cloud Advisor refresh** job starts disabled. Review enrollment, read access and
+inventory before enabling it as described in
+[Schedules and running jobs](administration.md#schedules-and-running-jobs).
+
 If you are enabling the Bot and Widget during Setup, follow the
 [optional AI setup steps](#optional-ai-features) before applying
 the draft. Otherwise leave them off and complete the data-load checks first.
