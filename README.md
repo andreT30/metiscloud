@@ -61,6 +61,12 @@ For an existing installation, follow [Upgrade](docs/upgrade.md), including the
 DBA-managed schema backup and configuration replacement rules. Do not run INITIAL
 over an installed application schema.
 
+## Website
+
+The [single-page product website](index.html) uses the approved demo media.
+See [website setup](docs/website.md) for local preview and GitHub Pages custom-domain
+configuration.
+
 ## Documentation
 
 Start at the [documentation guide](docs/README.md) for an ordered reading path.
