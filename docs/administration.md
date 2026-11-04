@@ -54,6 +54,12 @@ recommendations. See [Cloud Advisor](usage.md#cloud-advisor).
 Editing a PL/SQL block or stored-procedure action uses the job owner's privileges.
 Require DBA review. The UI does not create or drop jobs.
 
+The new **Cost Intelligence** job starts disabled. Configure its exact reporting
+scopes and method policies, check mining privileges and eligible history, and
+verify a bounded owner run before enabling recurring work. Its supplied action
+processes at most two configured scopes per run. Page Refresh reads saved results
+and never starts training. Follow [Cost Intelligence operations](cost-intelligence.md#prepare-and-operate-cost-intelligence).
+
 In Data Load Runs, **Stop job** applies only to verified active Scheduler
 execution and requires a reason. It is graceful and does not undo committed
 data. Refresh to confirm the outcome. **Mark failed** is for an execution that

@@ -96,6 +96,11 @@ fails, nightly cost ingestion remains on hold. Inspect the failed step and use
 the supported retry after fixing its cause. A stale RUNNING record needs execution
 verification before reconciliation; see [Troubleshooting](troubleshooting.md).
 
+Cost Intelligence needs its own exact reporting scopes, method policies and
+eligible history after core reporting works. It does not receive demo account
+settings or start training during Setup. Follow [Cost Intelligence](cost-intelligence.md#prepare-and-operate-cost-intelligence)
+before enabling its scheduled job.
+
 ## Verify the first load
 
 Open Home and select the intended currency and billing account. In Analysis,

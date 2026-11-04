@@ -75,6 +75,13 @@ record local decisions. Estimates are OCI's supplied values, not proof of
 savings; overlapping recommendations must not be added into a portfolio total.
 See [Cloud Advisor](usage.md#cloud-advisor).
 
+## Why are Cost Intelligence forecasts or anomaly counts unavailable?
+
+They need configured exact scopes, eligible history and saved background results,
+separately from installation and ordinary reports. Unsupported filters are not
+silently ignored. Refresh reads existing results and does not train a model.
+See [Cost Intelligence](cost-intelligence.md) for readiness and interpretation.
+
 ## Why does an alert remain after I read it?
 
 An active budget condition continues to count even after acknowledgment. The

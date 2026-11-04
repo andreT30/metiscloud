@@ -71,6 +71,11 @@ approval. Review the [standalone installer](../db/deployer/install_mc_bundle.sh)
 including property-graph and context privileges. Do not assume a restricted or
 free service tier meets these requirements.
 
+This release also requires native machine-learning privileges for the application
+owner: `CREATE MINING MODEL` and `EXECUTE ON SYS.DBMS_DATA_MINING`. INITIAL includes
+them in its prerequisite policy. Forecast readiness, target method configuration
+and recurring activation remain separate; see [Cost Intelligence](cost-intelligence.md).
+
 Choose an unused schema name, workspace name and non-conflicting application ID.
 INITIAL creates the schema; do not create an empty schema in advance.
 The examples use `MC_TARGET`, `MC_WORKSPACE` and app ID `2300`; these are examples,

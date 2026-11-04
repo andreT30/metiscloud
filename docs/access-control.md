@@ -46,6 +46,13 @@ cost-history and evidence requests check access again; a saved recommendation
 does not grant access to its resource. Cloud Advisor has no local decision or
 resource-change controls.
 
+Cost Intelligence reads require an exact authorized account/currency and optional
+named workload. Unsupported resource filters or combined workload scopes return
+unavailable instead of a broader result. Saved evidence, downloads and Home links
+do not bypass current access. Schema-owner model configuration and training are
+separate from ordinary application-user permissions. See
+[Cost Intelligence](cost-intelligence.md).
+
 ## Add an Oracle APEX Accounts user
 
 1. Have the APEX workspace administrator create the person's account and add it

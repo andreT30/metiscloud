@@ -21,6 +21,8 @@ installation, use [Upgrade](upgrade.md).
 - [Pages and in-app help](pages-and-help.md): find the right workspace and its help.
 - [User guide](usage.md): investigate spending, use inventory, save reports and
   interpret availability or assistant results.
+- [Cost Intelligence](cost-intelligence.md): read saved comparisons, forecasts and
+  unusual-cost reviews, and prepare their target configuration.
 - [FAQ](faq.md): common questions about deployment, access, data and maintenance.
 
 ## Configure and operate it

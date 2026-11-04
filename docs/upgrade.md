@@ -1,9 +1,13 @@
 # Upgrade an existing installation
 
-Use the supplied, verified `bundle-app.zip`. UPDATE requires the target
-deployment manager to support `mc-delta-2`. If it reports an older engine,
-stop and request supported migration instructions. Do not force the new bundle
-through an older installer or manually replace database packages.
+Use the supplied, verified `bundle-app.zip` and the installer supplied with this
+release. UPDATE first prepares the deployment tools, then applies the separately
+planned application changes. It requires the supported permanent update entry
+and the `mc-delta-2` application foundation. An older installation may need a
+matching compatibility release and its **Enable UI updates** step first. If the
+required entry is missing or rejected, stop and request the supported transition
+for that installed baseline. Do not run INITIAL over it or copy database packages
+manually. The full release ZIP alone is not a compatibility transition.
 
 ## Before changing the target
 
@@ -29,13 +33,16 @@ bash db/deployer/install_mc_bundle.sh \
 ```
 
 Replace `MC_TARGET` with the target schema's SQLcl saved connection.
-UPDATE preview connects to the database, starts a delta run, uploads planning
-metadata and produces the plan. It cancels that planning run on exit before
-transferring selected object payloads. **It is not read-only.**
+UPDATE preview connects to the database and retains planning metadata for the
+deployment-tool comparison. It starts no preparation or application worker and
+does not apply their changes. It does not produce the later application plan
+before preparation completes. **It is not read-only.**
 
-Review planned changes and ownership conflicts. UPDATE does not accept ADMIN
-grant-remediation options. A missing privilege needs a separately reviewed DBA
-action; do not add broad grants to make the check pass.
+Review planned changes and ownership conflicts. Ordinary UPDATE uses only the
+target connection and reports exact missing grants for separate DBA action.
+This release requires `CREATE MINING MODEL` and execution access to
+`SYS.DBMS_DATA_MINING` for the application owner. Do not substitute broad roles
+or ANY MINING privileges.
 
 ## Apply the plan
 
@@ -43,6 +50,25 @@ action; do not add broad grants to make the check pass.
 bash db/deployer/install_mc_bundle.sh \
   --mode UPDATE --bundle bundle-app.zip --connection MC_TARGET
 ```
+
+This real UPDATE authorizes both deployment-tool preparation and application
+execution. It follows preparation progress before submitting the application
+plan. For separate review and confirmation between those stages, use the
+[application workflow](#apply-through-the-application).
+
+If a DBA explicitly approves automatic remediation of the reported missing
+grants, the CLI also accepts the following paired options:
+
+```bash
+bash db/deployer/install_mc_bundle.sh \
+  --mode UPDATE --bundle bundle-app.zip --connection MC_TARGET \
+  --apply-missing-grants --admin-connection TARGET_ADMIN
+```
+
+Use only a reviewed ADMIN saved connection for the same target. These options
+authorize the installer's bounded grant policy, not arbitrary administrative SQL.
+Ordinary application administrators can instead have the DBA apply the exact
+reported statements and use **Retry prerequisites** in the application.
 
 The target compares installed receipts and object revisions with the release.
 Missing objects are created, newer revisions update owned objects, unchanged
@@ -78,10 +104,13 @@ definitions from replacement.
 
 An administrator can also use **Import / Update App**:
 
-1. Select the verified ZIP and choose **Upload and show plan**.
-2. Review the uploaded version and selected changes.
-3. Choose **Queue selected UPDATE** once.
-4. Follow **Runs** for the object count, seed step, APEX step and final result.
+1. Open **Import & Deploy**, select the verified ZIP and choose **Upload and inspect**.
+2. Review the deployment-tool preview and choose **Prepare manager** once.
+   This changes the update tooling, but does not apply application changes.
+3. Resolve any reported prerequisites, then review the application plan. After
+   DBA grants, use **Retry prerequisites** without uploading the ZIP again.
+4. Choose **Queue selected UPDATE** once and confirm the application changes.
+5. Follow **Runs** for the object count, seed step, APEX step and final result.
    Open **View log** to inspect progress. The queued operation continues beyond
    the browser request; a slow response is not a reason to queue another UPDATE.
 
@@ -89,6 +118,11 @@ The UI cannot install a new empty environment. Ordinary UPDATE does not take a
 backup or repeat full-archive validation, so validate the supplied artifact
 before uploading it. Bundle Storage retains compact delta archives and historical
 bundles; neither is a backup of target data.
+
+After an interruption, reopen the page and inspect the retained operation. Use
+**Resume preparation** when offered, rather than submitting a duplicate release.
+The CLI can resume its captured phase when rerun with the same bundle and target.
+Retained failure history is not permission to discard an unfinished operation.
 
 ## Check after UPDATE
 
@@ -98,12 +132,11 @@ results, load monitoring and intended job states. Existing scheduler states are
 retained and new application jobs remain disabled; review them before resuming
 maintenance-paused schedules. Test optional AI/email separately when enabled.
 
-For **26.10.22.03**, review the new **Cloud Advisor refresh** job before enabling
-it. Verify recommendations with an Administrator and a restricted User, including
-the resource and cost-history links. Unmatched billing identities must show an
-unavailable/ambiguous message rather than a broader report. Follow the
-[collection guidance](administration.md#schedules-and-running-jobs) and
-[Cloud Advisor guide](usage.md#cloud-advisor).
+For **26.11.02.01**, run the read-only Cost Intelligence readiness report and
+review the new disabled job, target scope/method configuration and eligible
+history. Training and scheduled activation are separate authorized operations.
+Verify saved results with an Administrator and a restricted User. Follow
+[Cost Intelligence](cost-intelligence.md#prepare-and-operate-cost-intelligence).
 
 Review Bot parameters and semantic readiness after the seed step. Test a known
 question, an out-of-scope request and a restricted user's access. Check that

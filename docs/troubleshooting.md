@@ -44,8 +44,10 @@ with the original journal and ADMIN connection, and review what it removed.
 
 An unsupported engine requires supported migration instructions. Revision,
 lineage and unowned-object conflicts require investigation, not a forced update.
-A missing privilege requires a separately reviewed DBA action; UPDATE cannot
-use the old ADMIN remediation flags.
+A missing privilege requires a separately reviewed DBA action. Use the exact
+reported statements and **Retry prerequisites**, or the explicitly authorized
+paired CLI grant options in [Upgrade](upgrade.md#apply-the-plan). Do not provide
+ADMIN credentials to the application page.
 
 For partial execution, inspect Runs and the first failed object. Ask the DBA to
 review compilation and current receipt state before retrying. Oracle DDL may
@@ -111,6 +113,20 @@ run rather than treating retained data as current. If the snapshot changed while
 browsing, refresh the list. Resource cost history needs an unambiguous billing
 match; do not bypass a missing/ambiguous-match message by removing access checks.
 See [Cloud Advisor](usage.md#cloud-advisor) for estimate and download limits.
+
+## Cost Intelligence is unavailable
+
+Confirm one exact account/currency and, optionally, a named workload. Advanced
+filters, resource selections, Advisor cost context and workload unions are not
+supported by saved Cost Intelligence results. Use the exact saved comparison
+period or **Latest saved comparison**; do not silently widen reporting scope.
+
+Ask the DBA to run the installer's read-only **OML_READINESS** report as the
+application owner. Check configured scopes and all four horizon policies, mining
+privileges, eligible history, successful saved publication and job state. The
+new job starts disabled; installation and page Refresh do not create forecasts.
+Partial assessment or unknown coverage is not zero cost or zero anomalies.
+See [Cost Intelligence](cost-intelligence.md).
 
 ## Assistant or spreadsheet functions fail
 

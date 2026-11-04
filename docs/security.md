@@ -18,10 +18,13 @@ installing the bundle does not replace the operator's security responsibilities.
 Use encrypted SQLcl saved connections. Never pass a database password on the
 command line or store wallets, connection definitions, private keys, tokens, or
 secrets in this repository. Separate the target-schema connection from the ADMIN
-connection and use ADMIN only for reviewed installation, cleanup or removal.
+connection and use ADMIN only for reviewed installation, cleanup, removal or
+explicitly authorized missing-grant remediation.
 
 The standalone installer contains the target ADMIN actions. Review them before
-execution; UPDATE does not perform ADMIN grant remediation. Apply least privilege in OCI
+execution. Ordinary UPDATE reports missing grants; automatic remediation requires
+both explicit grant authorization and the matching ADMIN connection as described
+in [Upgrade](upgrade.md). Apply least privilege in OCI
 IAM and database grants; broad roles or unrestricted cross-schema access are not
 part of the supported deployment.
 

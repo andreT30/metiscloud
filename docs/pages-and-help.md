@@ -26,7 +26,7 @@ or replace the confirmation shown before a destructive action.
 | Page | What it is for | Who normally uses it |
 | --- | --- | --- |
 | Home | Subscription credit health, forecasts and recent workload spending. | Administrators and Contributors. |
-| Analysis | Cost and usage investigation by period, workload, service, compartment and resource; includes reporting downloads. | Administrators, Contributors and Users within their allowed scope. |
+| Analysis | Cost and usage investigation, saved Cost Intelligence comparisons, forecasts and anomaly reviews; includes reporting downloads. | Administrators, Contributors and Users within their allowed scope. |
 | OCI Tools | Resource inventory, analytics/topology, Cloud Advisor recommendations, policies, compartments, price comparison and service limits/usage. | Administrators and Contributors; Users have permitted workload-scoped views. Ratecard, Load Policies and Limits & Usage are administrator-only. |
 | My Reports | Saved reporting scopes and recurring cost comparisons. Saved items belong to their creator. | Users with the required workload access, Contributors and Administrators. |
 | Availability Metrics | Collected metric health, trends and coverage for the selected scope. Missing metrics alone do not prove an outage. | Users with reviewed workload access, Contributors and Administrators. |
@@ -46,7 +46,7 @@ These workspaces require application administration rights.
 | Bot Parameters / Chatbot Administration | Shared assistant configuration: Parameters, Dataset Configuration, Column Indexer, Rules Tester and Vector Store. |
 | Bot Logs | Inspect recorded Native and Generic assistant runs, outcomes and detailed diagnostic evidence. Logs can contain sensitive context and results. |
 | Bot Insights / Cost / Bot Operations | Assistant quality and feedback, token/cost metrics and page-help widget operational information. |
-| Import / Update App | Upload a supplied release, inspect its plan, queue UPDATE and follow runs or stored bundles. A new installation uses the standalone installer first. |
+| Import / Update App | Upload and inspect a supplied release, prepare the update manager, review the application plan, queue UPDATE and follow progress or resume eligible work. A new installation uses the standalone installer first. |
 | Source registry | Inspect installed database-object revisions and removal records when reviewing an installation or update. |
 
 Use [Administration](administration.md) for routine operating tasks,

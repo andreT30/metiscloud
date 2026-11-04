@@ -34,6 +34,7 @@ September 2026; current guides and in-app help take precedence over older labels
 
 - Investigate cost and usage by service, compartment, workload, resource and period.
 - Track subscription credits, spending trends, forecasts and workload budgets.
+- Compare saved cost changes, review future cost estimates and investigate unusual spending.
 - Explore OCI inventory, tags, compartment hierarchies and resource relationships.
 - Review OCI service limits, utilization and available quantities as an administrator.
 - Explore saved Cloud Advisor recommendations and follow their resource and cost evidence.

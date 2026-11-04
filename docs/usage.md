@@ -47,6 +47,11 @@ periods before comparing it with an on-screen chart.
 A failed or unavailable component is not a zero value. Reset filters and retry
 once, then ask the administrator to inspect ingestion if the problem persists.
 
+Home also shows saved future report-cost and unusual-cost summaries when
+configured. Select a summary to open its matching Cost Intelligence view in
+Analysis. These summaries are separate from credit balances and do not start
+model training when refreshed. See [Cost Intelligence](cost-intelligence.md).
+
 ## Analysis: investigate a change
 
 ![Analysis cost chart and pivot using approved demo data](media/analysis-cost-demo.jpg)
@@ -60,13 +65,15 @@ once, then ask the administrator to inspect ingestion if the problem persists.
    with the full compartment path so similarly named compartments stay distinct.
 4. Use Columns where offered to stage Charge Description or SKU, then Apply.
    Cancel retains the current selection.
-5. Open Usage Trends for current and previous values. Its selected end date
-   anchors comparison windows. Read the exact numbers alongside percentage
-   changes; the chart shows the largest nonzero changes, not every row.
+5. Open **Cost intelligence** for saved forecasts, cost comparisons and unusual
+   cost findings. Select one account, currency and, optionally, an exact named
+   workload. These results have their own saved reporting periods and availability
+   requirements; see [Cost Intelligence](cost-intelligence.md).
 
 Budget cards need one selected workload and a budget in the same currency.
 An environment filter makes the workload-wide comparison unavailable.
-The 730-hour projection uses the recent 30-day cost rate. Missing budget or
+The 730-hour budget projection uses the 30-day cost rate ending at the selected
+period end. It is separate from the saved Cost Intelligence forecast. Missing budget or
 comparison data does not mean zero.
 
 ### Compare usage quantities

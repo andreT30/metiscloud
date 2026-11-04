@@ -4,6 +4,37 @@ Public distribution changes start with this baseline. See [VERSION](VERSION)
 for the bundled application version and the [upgrade guide](docs/upgrade.md)
 before updating an installation.
 
+## 26.11.02.01 - Cost Intelligence
+
+### Added
+
+- **Analysis → Cost intelligence** with saved cost comparisons, future cost
+  estimates for the rest of the month, three months and six months, and
+  statistical reviews of unusual cost changes.
+- Forecast charts combining recorded costs and future estimates, with daily
+  and monthly views and a choice of calendar totals or 730-hour equivalents.
+- Consumption scenarios for comparing an explicit percentage change with a
+  saved forecast, plus saved-evidence downloads.
+- Home summaries for future report cost and unusual cost changes, linked to
+  the corresponding Analysis views.
+- A read-only Cost Intelligence readiness report in the standalone installer.
+
+### Modified
+
+- In-app updates now separate release inspection, update preparation and
+  confirmation of application changes, with progress, resume and prerequisite
+  retry controls.
+- Setup guidance includes examples for cost-report locations and tag keys.
+
+### Documentation
+
+- Added Cost Intelligence usage, prerequisites, configuration and operating guidance.
+- Updated installation and upgrade instructions for the supplied installer and
+  in-app update workflow.
+
+Cost Intelligence requires target configuration and suitable history before
+results are available. See [Cost Intelligence](docs/cost-intelligence.md).
+
 ## 26.10.22.03 - Cloud Advisor
 
 ### Added

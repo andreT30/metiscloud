@@ -8,6 +8,7 @@ umask 077
 unset initial_app_secret_hex initial_app_email_hex initial_database_secret_hex MC_INITIAL_REPLACE_HASH
 
 usage() {
+  echo "Read-only OML report: $0 --mode OML_READINESS --connection APPLICATION_OWNER (no bundle or ADMIN required; never trains or grants)"
   echo "INITIAL recovery: $0 --mode CLEANUP --admin-connection NAME --journal-directory PATH (no bundle required)"
   echo "Uninstall preview: $0 --mode UNINSTALL --admin-connection NAME --schema OWNER --workspace NAME --target-app-id ID --dry-run"
   echo "UNINSTALL needs no original journal or hostname. Optional --journal-directory retains progress only; --target-connection-name selects one saved connection; otherwise verified target-schema connections are discovered and removed."
@@ -123,7 +124,7 @@ database_mode="$(printf '%s' "$database_mode" | tr '[:lower:]' '[:upper:]')"
 [[ "$mode" == UNINSTALL || ( -z "$confirm_drop_schema" && "$acknowledge_data_loss" == N ) ]] || fail 'Uninstall confirmation options require --mode UNINSTALL'
 [[ -z "$workspace_admin" || ( "$mode" == INITIAL && "$workspace_mode" == CREATE ) ]] || fail '--workspace-admin requires INITIAL with --workspace-mode CREATE; existing workspace accounts are preserved'
 
-[[ ( -f "$bundle" && "$mode" =~ ^(INITIAL|UPDATE)$ ) || "$mode" == CLEANUP || "$mode" == UNINSTALL ]] || { usage; exit 2; }
+[[ ( -f "$bundle" && "$mode" =~ ^(INITIAL|UPDATE)$ ) || "$mode" == CLEANUP || "$mode" == UNINSTALL || "$mode" == OML_READINESS ]] || { usage; exit 2; }
 command -v sql >/dev/null 2>&1 || fail "SQLcl executable 'sql' is required"
 
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/mc-bundle.XXXXXX")"
@@ -548,7 +549,7 @@ mc_bundle_validate() {
     while IFS= read -r system_privilege || [[ -n "$system_privilege" ]]; do
       system_privilege="${system_privilege%$'\r'}"
       case "$system_privilege" in
-        'CREATE SESSION'|'CREATE TABLE'|'CREATE PROCEDURE'|'CREATE JOB'|'CREATE SEQUENCE'|'CREATE VIEW'|'CREATE MATERIALIZED VIEW'|'CREATE PROPERTY GRAPH'|'CREATE TRIGGER'|'CREATE TYPE'|'CREATE SYNONYM'|'CREATE ANY CONTEXT') ;;
+        'CREATE SESSION'|'CREATE TABLE'|'CREATE PROCEDURE'|'CREATE JOB'|'CREATE SEQUENCE'|'CREATE VIEW'|'CREATE MATERIALIZED VIEW'|'CREATE PROPERTY GRAPH'|'CREATE TRIGGER'|'CREATE TYPE'|'CREATE SYNONYM'|'CREATE ANY CONTEXT'|'CREATE MINING MODEL') ;;
         *) mc_bundle_validation_error 'unsupported system privilege inventory entry'; return 1 ;;
       esac
       [[ "$seen_systems" != *"|$system_privilege|"* ]] || { mc_bundle_validation_error 'duplicate system privilege inventory entry'; return 1; }
@@ -1030,6 +1031,24 @@ SQL
   run_script product-installation-fence "$product_fence"
 }
 
+initial_target_identity() {
+  # Configuration/page-help seeds run before APEX import. Use only the selected
+  # INITIAL identity; persist the actual component offset after import as before.
+  local identity_sql="$tmp/initial-target-identity.sql"
+  cat > "$identity_sql" <<SQL
+whenever oserror exit failure rollback
+whenever sqlerror exit sql.sqlcode rollback
+set define off
+begin
+  merge into app_config t using (select 'APEX_APP_ID' k, '$target_id' v from dual) s on (t.config_key=s.k) when matched then update set t.config_value=s.v when not matched then insert (config_key,config_value) values (s.k,s.v);
+  merge into app_config t using (select 'APEX_WORKSPACE_NAME' k, '$target_workspace' v from dual) s on (t.config_key=s.k) when matched then update set t.config_value=s.v when not matched then insert (config_key,config_value) values (s.k,s.v);
+  commit;
+end;
+/
+SQL
+  run_script initial-target-identity "$identity_sql"
+}
+
 initial_bootstrap_write_job_check() {
   # Shared by disabled-job creation and final admission. Names/actions are fixed;
   # an existing incompatible job is rejected rather than replaced or repurposed.
@@ -1058,6 +1077,7 @@ begin dbms_utility.compile_schema(schema=>user,compile_all=>false); end;
 declare n number;
 begin
   for p in (select column_value name from table(sys.odcivarchar2list(
+    'MC_MANAGER_UPDATER_PKG','MC_MANAGER_RELEASE_PKG',
     'MC_BUNDLE_ZIP_PKG','MC_BUNDLE_INTEGRITY_PKG','MC_RUNTIME_GUARD_PKG',
     'MC_BUNDLE_BOOTSTRAP_PKG','MC_BUNDLE_BOOTSTRAP_ASSETS_PKG','DEPLOY_MGR_PKG'))) loop
     select count(*) into n from user_objects where object_name=p.name
@@ -3181,7 +3201,7 @@ cat <<'MC_PRIVILEGE_POLICY'
   BEGIN
     RETURN p_priv IN ('CREATE SESSION','CREATE TABLE','CREATE PROCEDURE','CREATE JOB',
       'CREATE SEQUENCE','CREATE VIEW','CREATE MATERIALIZED VIEW','CREATE PROPERTY GRAPH',
-      'CREATE TRIGGER','CREATE TYPE','CREATE SYNONYM','CREATE ANY CONTEXT');
+      'CREATE TRIGGER','CREATE TYPE','CREATE SYNONYM','CREATE ANY CONTEXT','CREATE MINING MODEL');
   END;
   PROCEDURE policy_report(p_required sys.odcivarchar2list,p_objects CLOB,
     o_missing OUT PLS_INTEGER,o_sql OUT CLOB) IS
@@ -3245,7 +3265,7 @@ cat <<'MC_PRIVILEGE_POLICY'
   END;
   FUNCTION policy_baseline RETURN sys.odcivarchar2list IS
   BEGIN
-    RETURN sys.odcivarchar2list('CREATE SESSION','CREATE TABLE','CREATE PROCEDURE','CREATE JOB');
+    RETURN sys.odcivarchar2list('CREATE SESSION','CREATE TABLE','CREATE PROCEDURE','CREATE JOB','CREATE MINING MODEL');
   END;
   PROCEDURE policy_finish(p_required sys.odcivarchar2list,p_context_found BOOLEAN) IS
   BEGIN
@@ -3636,6 +3656,8 @@ cat <<'MC_ARCHIVE_INSPECTOR'
         'MC_BUNDLE_BOOTSTRAP_PKG','MC_BUNDLE_BOOTSTRAP_ASSETS_PKG','MC_ARTIFACT_UPDATE_PKG',
         'MC_ARTIFACT_SELECTION_PKG','MC_ARTIFACT_DEFINITION_PKG','MC_ARTIFACT_MANIFEST_PKG',
         'MC_ARTIFACT_RECEIPTS','MC_APEX_RECEIPTS','MC_DELTA_REQUEST','MC_DELTA_UPLOAD_ROWS',
+        'MC_MANAGER_UPDATER_PKG','MC_MANAGER_RELEASE_PKG','MC_MGR_UPDATES','MC_MGR_RECEIPTS',
+        'MC_UI_UPDATE_PKG','MC_UI_UPDATE_ASSETS_PKG',
         'DEP_REGISTRY_REVISIONS_PKG',
         'MC_REGISTRY_REVISION_CAPTURE_PKG','MC_REGISTRY_SOURCE_ARCHIVE_PKG',
         'MC_PRODUCT_REGISTRY_PKG','MC_REGISTRY_BASELINE_PKG','DEP_REV_PARITY',
@@ -3646,7 +3668,8 @@ cat <<'MC_ARCHIVE_INSPECTOR'
   -- BEGIN REGISTRY RETIREMENT IDENTITIES
   function retired_registry_identity(p_type varchar2,p_name varchar2,p_parent varchar2) return boolean is
   begin
-    return (p_type='TABLE' and p_name='DEP_REV_APPROVALS' and p_parent is null)
+    return (p_type='FOREIGN KEY' and p_name='MC_RF_OWNER_FK' and p_parent='MC_RUNTIME_FENCE')
+      or (p_type='TABLE' and p_name='DEP_REV_APPROVALS' and p_parent is null)
       or (p_type='PACKAGE' and p_name='MC_REGISTRY_BASELINE_PKG' and p_parent is null)
       or (p_type='PACKAGE BODY' and p_name='MC_REGISTRY_BASELINE_PKG' and p_parent is null)
       or (p_type='TABLE' and p_name='DEP_REV_PARITY' and p_parent is null)
@@ -4704,6 +4727,7 @@ cat <<'MC_ARCHIVE_INSPECTOR'
       'db/deploy/plan.txt', 'db/deploy/artifacts.json',
       'db/deploy/product-coverage.json', 'db/deploy/product-plan.txt',
       'db/deploy/initial-objects.txt', 'db/ddl/00_source_removals.sql',
+      'manager/manifest.json', 'manager/pre_install.sql', 'manager/finish_install.sql',
       'db/ddl/05_contexts.sql', 'db/ddl/95_app_config.sql',
       'db/ddl/96_chatbot_seed.sql', 'db/ddl/97_semantic_seed.sql',
       'db/migrations/manifest.txt',
@@ -5070,7 +5094,7 @@ cat <<'MC_ARCHIVE_INSPECTOR'
   BEGIN
     RETURN p_priv IN ('CREATE SESSION','CREATE TABLE','CREATE PROCEDURE','CREATE JOB',
       'CREATE SEQUENCE','CREATE VIEW','CREATE MATERIALIZED VIEW','CREATE PROPERTY GRAPH',
-      'CREATE TRIGGER','CREATE TYPE','CREATE SYNONYM','CREATE ANY CONTEXT');
+      'CREATE TRIGGER','CREATE TYPE','CREATE SYNONYM','CREATE ANY CONTEXT','CREATE MINING MODEL');
   END;
   PROCEDURE policy_report(p_required sys.odcivarchar2list,p_objects CLOB,
     o_missing OUT PLS_INTEGER,o_sql OUT CLOB) IS
@@ -5134,7 +5158,7 @@ cat <<'MC_ARCHIVE_INSPECTOR'
   END;
   FUNCTION policy_baseline RETURN sys.odcivarchar2list IS
   BEGIN
-    RETURN sys.odcivarchar2list('CREATE SESSION','CREATE TABLE','CREATE PROCEDURE','CREATE JOB');
+    RETURN sys.odcivarchar2list('CREATE SESSION','CREATE TABLE','CREATE PROCEDURE','CREATE JOB','CREATE MINING MODEL');
   END;
   PROCEDURE policy_finish(p_required sys.odcivarchar2list,p_context_found BOOLEAN) IS
   BEGIN
@@ -7500,7 +7524,7 @@ mc_grants_remediate() {
           SYSTEM)
             [[ -z "$b$c$extra" ]] || return 1
             case "$a" in
-              'CREATE SESSION'|'CREATE TABLE'|'CREATE PROCEDURE'|'CREATE JOB'|'CREATE SEQUENCE'|'CREATE VIEW'|'CREATE MATERIALIZED VIEW'|'CREATE PROPERTY GRAPH'|'CREATE TRIGGER'|'CREATE TYPE'|'CREATE SYNONYM'|'CREATE ANY CONTEXT') ;;
+              'CREATE SESSION'|'CREATE TABLE'|'CREATE PROCEDURE'|'CREATE JOB'|'CREATE SEQUENCE'|'CREATE VIEW'|'CREATE MATERIALIZED VIEW'|'CREATE PROPERTY GRAPH'|'CREATE TRIGGER'|'CREATE TYPE'|'CREATE SYNONYM'|'CREATE ANY CONTEXT'|'CREATE MINING MODEL') ;;
               *) echo 'ERROR: Unapproved system grant requested.' >&2; return 1 ;;
             esac
             printf "  execute immediate 'grant %s to '||dbms_assert.enquote_name(l_target,false);\n" "$a" >> "$statements"
@@ -7609,23 +7633,201 @@ mc_grants_local() {
   mc_grants_remediate "$report" "$tmp" "$attempted" || status=$?
   if ((status==2)); then mc_grants_local Y; else return "$status"; fi
 }
+# Permanent manager transport. SQLcl LOAD; no mutable manager is called here.
+mc_permanent_stage() {
+  local archive="$1" preview_only="${2:-false}" staging="MC_UPL_$(od -An -N10 -tx1 /dev/urandom | tr -d ' \n' | tr 'a-f' 'A-F')" stage_token
+  stage_token="$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')"
+  mc_update_csv "$archive" ZIP "$work/manager.csv" "$stage_token"
+  cat > "$work/manager-stage.sql" <<SQL
+whenever sqlerror exit failure rollback
+whenever oserror exit failure rollback
+set define off
+set echo off feedback off verify off heading off pagesize 0
+set serveroutput on size unlimited
+declare role_ varchar2(30);begin select upper(trim(config_value)) into role_ from app_config where config_key='MC_SOURCE_ROLE';if nvl(role_,'!')<>'TARGET' then raise_application_error(-20867,'UPDATE is target-only.');end if;end;
+/
+create table $staging (token varchar2(32),stream_kind varchar2(8),part_no number,encoded varchar2(4000));
+set load batch_rows 500
+set load batches_per_commit 10
+load $staging $work/manager.csv
+declare b blob;r raw(32767);id_ number;c json_object_t:=json_object_t();app_ number;ws_ number;role_ varchar2(30);count_ number;resuming_ boolean:=false;members_ mc_bundle_zip_pkg.t_members;incoming_ json_object_t;lineage_ varchar2(64);release_ varchar2(100);descriptor_ blob;p clob;j json_object_t;a json_array_t;e json_object_t;
+begin
+  select upper(trim(config_value)) into role_ from app_config where config_key='MC_SOURCE_ROLE';
+  if nvl(role_,'!')<>'TARGET' then raise_application_error(-20867,'UPDATE is target-only.');end if;
+  dbms_lob.createtemporary(b,true);
+  for row_ in(select encoded from $staging where token='$stage_token' order by part_no) loop
+    r:=utl_encode.base64_decode(utl_raw.cast_to_raw(row_.encoded));dbms_lob.writeappend(b,utl_raw.length(r),r);
+  end loop;
+  select to_number(config_value) into app_ from app_config where config_key='APEX_APP_ID';
+  select workspace_id into ws_ from apex_applications where application_id=app_ and owner=user;
+  c.put('owner',user);c.put('database_unique_name',sys_context('USERENV','DB_UNIQUE_NAME'));c.put('container_name',sys_context('USERENV','CON_NAME'));
+  c.put('application_id',app_);c.put('workspace_id',ws_);c.put('transport','CLI_DELTA');c.put('preview_only',$preview_only);
+  if $preview_only then
+    mc_bundle_zip_pkg.inspect(b,members_);
+    for i in 1..members_.count loop if members_(i).name='manager/manifest.json' then descriptor_:=mc_bundle_zip_pkg.get_member(b,members_(i),16777216);end if;end loop;
+    incoming_:=json_object_t.parse(descriptor_);lineage_:=incoming_.get_string('lineage_id');release_:=incoming_.get_string('release_id');
+    select count(*),min(request_id) into count_,id_ from mc_mgr_updates
+      where json_value(target_json,'$.transport')='CLI_DELTA' and nvl(json_value(target_json,'$.preview_only'),'false')='false'
+        and json_value(target_json,'$.owner')=user and json_value(target_json,'$.application_id' returning number)=app_
+        and json_value(target_json,'$.workspace_id' returning number)=ws_
+        and json_value(target_json,'$.database_unique_name')=sys_context('USERENV','DB_UNIQUE_NAME')
+        and json_value(target_json,'$.container_name')=sys_context('USERENV','CON_NAME')
+        and json_value(manager_json,'$.lineage_id')=lineage_
+        and json_value(manager_json,'$.release_id')=release_
+        and state not in ('STAGED','FINISHED');
+    if count_>1 then raise_application_error(-20867,'Multiple captured requests; select the existing operation in UI.');end if;
+    resuming_:=count_=1;
+  end if;
+  if not resuming_ then mc_manager_updater_pkg.stage(b,c.to_clob,id_);end if;
+  p:=mc_manager_updater_pkg.preview(id_);commit;j:=json_object_t.parse(p);
+  dbms_output.put_line('MC_UPDATER_RESUME|'||case when resuming_ then 'Y' else 'N' end);
+  dbms_output.put_line('MC_UPDATER_ID|'||id_);
+  dbms_output.put_line('MC_MANAGER_COUNTS|'||j.get_number('changed')||'|'||j.get_number('blocked'));
+  a:=j.get_array('components');for i in 0..a.get_size-1 loop e:=treat(a.get(i) as json_object_t);
+    if e.get_string('action')='BLOCK' then dbms_output.put_line('MC_MANAGER_BLOCK|'||e.get_string('label')||': '||e.get_string('reason'));
+    elsif e.get_string('action')<>'SKIP' then dbms_output.put_line('MC_MANAGER_MEMBER|'||e.get_string('member'));end if;
+  end loop;
+end;
+/
+drop table $staging purge;
+exit success commit
+SQL
+  echo "Manager transfer: $(wc -c < "$archive" | tr -d ' ') bytes."
+  if ! mc_update_sql 'permanent manager staging' "$work/manager-stage.sql" "$work/manager-stage.out"; then
+    # Exact transient table only; retain captured updater requests for recovery.
+    printf 'whenever sqlerror exit failure rollback\ndrop table %s purge;\nexit\n' "$staging" > "$work/manager-clean.sql"
+    sql -s -L -name "$saved" "@$work/manager-clean.sql" < /dev/null > "$work/manager-clean.out" 2>&1 || {
+      echo "WARNING: Ask the owner to remove transient upload table $staging if it exists." >&2;
+    }
+    return 1
+  fi
+  updater_id="$(mc_update_receipt MC_UPDATER_ID "$work/manager-stage.out")"
+  [[ "$updater_id" =~ ^[1-9][0-9]*$ ]] || return 1
+}
+
+mc_permanent_prepare() {
+  local member counts draft preview_dir="$work/manager-preview"
+  mkdir -m 700 "$preview_dir" "$work/manager-capsule" || return 1
+  # First inspect only the frozen descriptor. Do not extract unchanged manager SQL.
+  mc_update_extract manager/manifest.json "$preview_dir/manager/manifest.json" || return 1
+  (cd "$preview_dir" && zip -q -D "$work/manager-preview.zip" manager/manifest.json) || return 1
+  mc_permanent_stage "$work/manager-preview.zip" true || return 1
+  draft="$updater_id"
+  if [[ "$(mc_update_receipt MC_UPDATER_RESUME "$work/manager-stage.out")" == Y ]]; then
+    [[ "$dry" == N ]] || { echo "Captured request $updater_id requires preparation/recovery; dry run starts no work.";return 2; }
+    mc_permanent_submit || return 1
+    mc_permanent_follow
+    return $?
+  fi
+  counts="$(mc_update_receipt MC_MANAGER_COUNTS "$work/manager-stage.out")"
+  [[ "$counts" =~ ^[0-9]+\|0$ ]] || { sed -n 's/^MC_MANAGER_BLOCK|//p' "$work/manager-stage.out" >&2;echo "ERROR: Manager revision conflict: $counts. No manager changed." >&2; return 1; }
+  echo "Manager plan (changed|blocked): $counts"
+  [[ "$dry" == N ]] || { echo 'Dry run: manager preview only; no manager or application changes.'; return 2; }
+  cp "$work/manager-stage.out" "$work/manager-preview.out"
+  printf '%s\n' manager/manifest.json manager/pre_install.sql manager/finish_install.sql manifest.json db/deploy/artifacts.json \
+    db/preflight/required_system_privileges.txt db/preflight/required_privileges.txt db/ddl/05_contexts.sql > "$work/manager-members"
+  sed -n 's/^MC_MANAGER_MEMBER|//p' "$work/manager-preview.out" >> "$work/manager-members"
+  sort -u "$work/manager-members" -o "$work/manager-members"
+  while IFS= read -r member; do mc_update_extract "$member" "$work/manager-capsule/$member" || return 1; done < "$work/manager-members"
+  (cd "$work/manager-capsule" && zip -q -D "$work/manager.zip" -@ < "$work/manager-members")
+  mc_permanent_stage "$work/manager.zip" || return 1
+  mc_permanent_submit "$draft" || return 1
+  mc_permanent_follow
+}
+
+mc_permanent_submit() {
+  local draft="${1:-0}"
+  cat > "$work/manager-submit.sql" <<SQL
+whenever sqlerror exit failure rollback
+set define off
+begin
+  -- The metadata-only draft never owned a worker or fence; retain its header only.
+  update mc_mgr_updates set release_blob=null where request_id=$draft and state='STAGED';commit;
+  mc_manager_updater_pkg.resume($updater_id);
+end;
+/
+exit success commit
+SQL
+  mc_update_sql 'manager preparation' "$work/manager-submit.sql" "$work/manager-submit.out" || return 1
+  echo "Following manager preparation $updater_id. Retained request can be resumed without uploading again."
+}
+
+mc_permanent_follow() {
+  local manager_state
+  while :; do
+    cat > "$work/manager-status.sql" <<SQL
+whenever sqlerror exit failure rollback
+set define off
+set echo off feedback off heading off pagesize 0
+set serveroutput on size unlimited
+declare p clob;j json_object_t;a json_object_t;
+begin
+  p:=mc_manager_updater_pkg.status($updater_id);j:=json_object_t.parse(p);
+  dbms_output.put_line('MC_MANAGER_RUNNING|'||case when j.get_boolean('running') then 'Y' else 'N' end);
+  dbms_output.put_line('MC_MANAGER_STATE|'||j.get_string('state'));
+  dbms_output.put_line('MC_MANAGER_PROGRESS|'||j.get_string('state')||' '||j.get_number('elapsed_seconds')||'s '||coalesce(j.get_string('current_unit_label'),j.get_string('current_unit_key'))||' ('||j.get_number('completed_units')||'/'||j.get_object('plan').get_number('changed')||')');
+  if j.has('application') then a:=j.get_object('application');dbms_output.put_line('MC_DELTA_TOKEN|'||a.get_string('token'));dbms_output.put_line('MC_RETRY_LAUNCH|'||case when a.get_boolean('canResumeLaunch') then 'Y' else 'N' end);if a.get_number('runId') is not null then dbms_output.put_line('MC_DELTA_RUN|'||a.get_number('runId'));end if;end if;
+  if j.has('error') then dbms_output.put_line('MC_MANAGER_ERROR|'||replace(dbms_lob.substr(j.get_clob('error'),3000,1),chr(10),'~'));end if;
+end;
+/
+exit success rollback
+SQL
+    mc_update_sql 'manager status' "$work/manager-status.sql" "$work/manager-status.out" || return 1
+    mc_update_receipt MC_MANAGER_PROGRESS "$work/manager-status.out"
+    manager_state="$(mc_update_receipt MC_MANAGER_STATE "$work/manager-status.out")"
+    # A recovered handoff may retain its earlier error for history. Its current
+    # accepted state and bound application token determine whether to continue.
+    if [[ "$manager_state" == HANDOFF_ACCEPTED ]]; then
+      token="$(mc_update_receipt MC_DELTA_TOKEN "$work/manager-status.out")"
+      existing_run="$(mc_update_receipt MC_DELTA_RUN "$work/manager-status.out")"
+      retry_launch="$(mc_update_receipt MC_RETRY_LAUNCH "$work/manager-status.out")"
+      [[ "$token" =~ ^[0-9a-f]{32}$ ]] || { echo 'ERROR: Accepted manager handoff has no valid application token; inspect current manager status.' >&2;return 1; }
+      return 0
+    fi
+    if [[ -n "$(mc_update_receipt MC_MANAGER_ERROR "$work/manager-status.out")" && "$(mc_update_receipt MC_MANAGER_RUNNING "$work/manager-status.out")" == N ]]; then
+      echo "ERROR: $(mc_update_receipt MC_MANAGER_ERROR "$work/manager-status.out" | tr '~' '\n')" >&2
+      echo "Request $updater_id is retained. Rerun the same UPDATE or use Resume preparation in UI." >&2;return 1
+    fi
+    case "$manager_state" in
+      FAILED|BLOCKED) echo "ERROR: $(mc_update_receipt MC_MANAGER_ERROR "$work/manager-status.out" | tr '~' '\n')" >&2
+        echo "Resume retained request: begin mc_manager_updater_pkg.resume($updater_id); end; /" >&2;return 1 ;;
+      QUEUED|PRE_INSTALL|APPLYING_MANAGER|FINISH_INSTALL|MANAGER_READY|HANDOFF_PENDING) sleep 5 ;;
+      *) echo 'ERROR: Unexpected permanent updater state.' >&2;return 1 ;;
+    esac
+  done
+}
+
+# Optional, explicitly authorized CLI grants use the existing bounded policy.
+# Normal UPDATE only reports exact DBA instructions from the prepared manager.
+mc_update_authorized_grants() {
+  local status=0 attempt=N member grant_content="$work/authorized-grant-members"
+  # A retained manager request resumes without reconstructing its capsule.
+  # Read only the three local prerequisite members needed for explicit grants.
+  mkdir -m 700 "$grant_content" || return 1
+  for member in db/preflight/required_system_privileges.txt db/preflight/required_privileges.txt db/ddl/05_contexts.sql; do
+    mc_update_extract "$member" "$grant_content/$member" || return 1
+  done
+  while :; do
+    mc_grants_write_check "$work/authorized-grants.sql" "$grant_content" || return 1
+    mc_grants_sql "$saved" "$work/authorized-grants.sql" "$work/authorized-grants.out" || return 1
+    status=0;mc_grants_remediate "$work/authorized-grants.out" "$work" "$attempt" || status=$?
+    if [[ "$status" == 2 ]]; then attempt=Y;elif [[ "$status" != 0 ]]; then return "$status";else break;fi
+  done
+  cat > "$work/retry-grants.sql" <<SQL
+whenever sqlerror exit failure rollback
+set define off
+set serveroutput on size unlimited
+declare p clob;j json_object_t;begin
+ p:=mc_ui_update_pkg.retry_prerequisites('$token');j:=json_object_t.parse(p);commit;
+ if j.get_object('prerequisites').get_string('status')<>'READY' then raise_application_error(-20867,'Required owner grants remain unresolved; use the displayed DBA guidance.');end if;
+end;
+/
+exit success commit
+SQL
+  mc_update_sql 'current manager prerequisites' "$work/retry-grants.sql" "$work/retry-grants.out"
+}
 # UPDATE transport. The target plans from registry revisions before any payload
 # transfer; SQLcl LOAD moves only the selected, compact release archive.
-mc_update_contract() (
-  set -euo pipefail
-  local archive="$1" work="$2" contract
-  [[ -f "$archive" && ! -e "$work" ]] || return 1
-  command -v zip >/dev/null && command -v base64 >/dev/null || {
-    echo 'ERROR: UPDATE requires zip and base64.' >&2; return 1;
-  }
-  mkdir -m 700 "$work"
-  mc_bundle_archive "$archive" "$work" entry "$work/bundle.properties" bundle.properties 8192 || return 1
-  [[ $(wc -c < "$work/bundle.properties") -le 8192 ]] || return 1
-  contract="$(sed -n 's/^MC_BUNDLE_CONTRACT=//p' "$work/bundle.properties")"
-  [[ "$contract" == mc-bundle-1.13.0 ]] || return 1
-  printf '%s\n' "$contract"
-)
-
 mc_update_sql() {
   local label="$1" script="$2" output="$3"
   if ! sql -s -L -name "$saved" "@$script" < /dev/null > "$output" 2>&1; then
@@ -7646,13 +7848,13 @@ mc_update_receipt() {
 }
 
 mc_update_csv() {
-  local source="$1" kind="$2" destination="$3" part=0 chunk
+  local source="$1" kind="$2" destination="$3" csv_token="${4:-$token}" part=0 chunk
   printf 'TOKEN,STREAM_KIND,PART_NO,ENCODED\n' > "$destination"
   base64 < "$source" | tr -d '\r\n' | fold -w 4000 > "$destination.encoded"
   while IFS= read -r chunk || [[ -n "$chunk" ]]; do
     [[ "$chunk" =~ ^[A-Za-z0-9+/]+={0,2}$ && $((${#chunk}%4)) -eq 0 ]] || return 1
     part=$((part+1))
-    printf '%s,%s,%s,%s\n' "$token" "$kind" "$part" "$chunk" >> "$destination"
+    printf '%s,%s,%s,%s\n' "${csv_token:-$token}" "$kind" "$part" "$chunk" >> "$destination"
   done < "$destination.encoded"
   rm -f -- "$destination.encoded"
   ((part>0))
@@ -7738,40 +7940,30 @@ SQL
 mc_update_run() (
   set -euo pipefail
   local bundle="$1" saved="$2" work="$3" dry="$4" token='' submitted=N
-  local plan_line member action total=0 run='' file
+  local plan_line member action total=0 run=''
   [[ -f "$bundle" && "$saved" =~ ^[A-Za-z][A-Za-z0-9_.-]{0,127}$ && "$dry" =~ ^[YN]$ ]] || return 1
   mkdir -m 700 "$work"
   mc_bundle_archive "$bundle" "$work" list - > "$work/archive-members" || return 1
   if sort "$work/archive-members" | uniq -d | grep -q .; then
     echo 'ERROR: Release ZIP has duplicate member paths.' >&2; return 1;
   fi
-  trap 'if [[ "$submitted" == N && "$token" =~ ^[0-9a-f]{32}$ ]]; then
-    printf "begin mc_artifact_update_pkg.delta_cancel(\x27%s\x27); end;\n/\nexit success commit\n" "$token" > "$work/cancel.sql"
-    sql -s -L -name "$saved" "@$work/cancel.sql" < /dev/null > "$work/cancel.out" 2>&1 || true
-  fi' EXIT
-  cat > "$work/start.sql" <<'SQL'
+  local updater_id='' existing_run='' retry_launch=N prepare_rc=0
+  mc_permanent_prepare || prepare_rc=$?
+  [[ "$prepare_rc" != 2 ]] || return 0
+  [[ "$prepare_rc" == 0 ]] || return "$prepare_rc"
+  if [[ "$existing_run" =~ ^[1-9][0-9]*$ ]]; then
+    if [[ "$retry_launch" == Y ]]; then
+      cat > "$work/retry-launch.sql" <<SQL
 whenever sqlerror exit failure rollback
-whenever oserror exit failure rollback
-set echo off verify off feedback off heading off pagesize 0
-set serveroutput on
-declare t varchar2(32);
-begin
-  if deploy_mgr_pkg.update_engine_version<>'mc-delta-2' then
-    raise_application_error(-20867,'Upgrade the target deployment manager before UPDATE.');
-  end if;
-  mc_artifact_update_pkg.delta_begin(t);
-  dbms_output.put_line('MC_DELTA_TOKEN|'||t);
-end;
+set define off
+declare job_ varchar2(128);begin mc_ui_update_pkg.enqueue('$token',job_);end;
 /
 exit success commit
 SQL
-  mc_update_sql 'manager version gate' "$work/start.sql" "$work/start.out" || return 1
-  token="$(mc_update_receipt MC_DELTA_TOKEN "$work/start.out")"
-  [[ "$token" =~ ^[0-9a-f]{32}$ ]] || { echo 'ERROR: Target did not return a delta token.' >&2; return 1; }
-  mc_update_extract manifest.json "$work/manifest.json"
-  mc_update_extract db/deploy/artifacts.json "$work/artifacts.json"
-  mc_update_load OUTER "$work/manifest.json"
-  mc_update_load MANIFEST "$work/artifacts.json"
+      mc_update_sql 'captured application launch retry' "$work/retry-launch.sql" "$work/retry-launch.out" || return 1
+    fi
+    mc_update_follow "$existing_run";return $?
+  fi
   cat > "$work/plan.sql" <<SQL
 whenever sqlerror exit failure rollback
 whenever oserror exit failure rollback
@@ -7779,10 +7971,14 @@ set echo off verify off feedback off heading off pagesize 0 linesize 32767 trims
 set serveroutput on size unlimited
 declare p clob; j json_object_t; a json_array_t; x json_object_t; c json_object_t;
 begin
-  p:=mc_artifact_update_pkg.delta_plan('$token'); j:=json_object_t.parse(p);
+  select plan_clob into p from mc_delta_request where token='$token' and state='PLANNED';
+  j:=json_object_t.parse(p);
   c:=j.get_object('counts');
   dbms_output.put_line('MC_DELTA_COUNTS|'||c.get_number('CREATE')||'|'||c.get_number('UPDATE')||'|'||c.get_number('REMOVE')||'|'||c.get_number('SKIP')||'|'||c.get_number('BLOCK'));
   dbms_output.put_line('MC_DELTA_APEX|'||j.get_object('apex').get_string('action'));
+  if j.has('prerequisites') and j.get_object('prerequisites').get_string('status')<>'READY' then
+    a:=j.get_object('prerequisites').get_array('missing');for i in 0..a.get_size-1 loop x:=treat(a.get(i) as json_object_t);dbms_output.put_line('MC_REQUIRED_GRANT|'||x.get_string('sql'));end loop;
+  end if;
   a:=j.get_array('artifacts');
   for i in 0..a.get_size-1 loop
     x:=treat(a.get(i) as json_object_t);
@@ -7804,10 +8000,15 @@ SQL
     echo 'ERROR: Registry plan is blocked; no payload was transferred.' >&2; return 1
   fi
   echo "APEX: $(mc_update_receipt MC_DELTA_APEX "$work/plan.out")"
+  if grep -q '^MC_REQUIRED_GRANT|' "$work/plan.out"; then
+    sed -n 's/^MC_REQUIRED_GRANT|//p' "$work/plan.out" >&2
+    if [[ "${apply_missing_grants:-N}" == Y ]]; then mc_update_authorized_grants || return 1;
+    else echo "ERROR: DBA action required; release retained as request $updater_id. Retry through UI after applying these exact grants." >&2;return 1;fi
+  fi
   [[ "$dry" == N ]] || { echo 'Dry-run complete; no payload was transferred.'; return 0; }
   mkdir -m 700 "$work/selected"
   printf '%s\n' 'db/deploy/artifacts.json' 'db/ddl/05_contexts.sql' 'db/ddl/95_app_config.sql' \
-    'db/ddl/96_chatbot_seed.sql' 'db/ddl/97_semantic_seed.sql' > "$work/members"
+    'db/ddl/96_chatbot_seed.sql' 'db/ddl/97_semantic_seed.sql' 'db/deploy/product-coverage.json' > "$work/members"
   while IFS='|' read -r _ action object_type _ member key _; do
     [[ "$action" == CREATE || "$action" == UPDATE ]] || continue
     printf '%s\n' "$member" >> "$work/members"
@@ -7829,9 +8030,10 @@ whenever sqlerror exit failure rollback
 whenever oserror exit failure rollback
 set echo off verify off feedback off heading off pagesize 0
 set serveroutput on
-declare r number;
+declare r number;job_ varchar2(128);
 begin
-  mc_artifact_update_pkg.delta_submit('$token',r);
+  mc_ui_update_pkg.enqueue('$token',job_);
+  select run_id into r from mc_delta_request where token='$token';
   dbms_output.put_line('MC_DELTA_RUN|'||r);
 end;
 /
@@ -7864,6 +8066,371 @@ SQL
   mc_update_follow "$run"
 )
 [[ "$admin_connection" =~ ^[A-Za-z][A-Za-z0-9_.-]{0,127}$ || -z "$admin_connection" ]] || fail 'Invalid ADMIN saved connection name'
+mc_oml_readiness_sql() {
+cat <<'MC_OML_READINESS'
+-- GENERATED by build_installer.sh; do not edit.
+-- Read-only Cost Intelligence report. Generated inventory comes from the registry.
+-- Never trains, captures snapshots, grants privileges, publishes results, or enables jobs.
+whenever oserror exit failure rollback
+whenever sqlerror exit sql.sqlcode rollback
+set define off echo off verify off feedback off pages 0
+set serveroutput on size unlimited
+
+declare
+  missing_ number:=0; n number; effective_ number; direct_ number; instance_ number;
+  owner_ varchar2(128):=sys_context('USERENV','SESSION_USER');
+  today_ date:=trunc(cast(sys_extract_utc(systimestamp) as date)); first_ date; cutoff_ date;
+  cursor_ sys_refcursor; scope_ number; account_ varchar2(200); currency_ varchar2(20);
+  kind_ varchar2(20); policies_ number; run_ number; observations_ number; tail_ date; enabled_ varchar2(5);
+  quota_ number; tablespace_ varchar2(128);
+  procedure report(section_ varchar2,state_ varchar2,detail_ varchar2) is
+  begin dbms_output.put_line(section_||'|'||state_||'|'||replace(replace(detail_,chr(10),' '),chr(13),' '));end;
+  procedure expected(type_ varchar2,name_ varchar2,parent_ varchar2) is hits_ number;
+  begin
+    if type_ in ('CONSTRAINT','FOREIGN KEY') then
+      select count(*) into hits_ from user_constraints where constraint_name=name_ and table_name=parent_
+        and status='ENABLED' and validated='VALIDATED';
+    elsif type_='INDEX' then
+      select count(*) into hits_ from user_indexes where index_name=name_ and table_name=parent_
+        and status in ('VALID','N/A') and nvl(domidx_status,'VALID')='VALID';
+    elsif type_='JOB' then
+      select count(*) into hits_ from user_scheduler_jobs where job_name=name_;
+    else
+      select count(*) into hits_ from user_objects where object_name=name_ and object_type=type_ and status='VALID';
+    end if;
+    if hits_<>1 then missing_:=missing_+1;report('COMPILATION','MISSING_OR_INVALID',type_||' '||name_);end if;
+  end;
+begin
+  report('OWNER_CONTEXT','SESSION',owner_||'; current_user='||sys_context('USERENV','CURRENT_USER')||
+    '; current_schema='||sys_context('USERENV','CURRENT_SCHEMA'));
+  if owner_ in ('ADMIN','SYS','SYSTEM') or owner_<>sys_context('USERENV','CURRENT_USER') or owner_<>sys_context('USERENV','CURRENT_SCHEMA')
+    or sys_context('USERENV','PROXY_USER') is not null then
+    raise_application_error(-20070,'Connect directly as application owner with matching current schema; no proxy or ADMIN session.');
+  end if;
+  execute immediate 'begin :n:=nvl(apex_application.g_instance,0);end;' using out instance_;
+  if instance_<>0 or dbms_transaction.local_transaction_id(false) is not null then
+    raise_application_error(-20070,'Run outside APEX in a fresh owner connection with a clean transaction.');end if;
+  -- BEGIN GENERATED COST INTELLIGENCE INVENTORY
+  expected('CONSTRAINT','MC_CI_ANOM_DAY_PK','MC_CI_ANOMALY_DAYS');
+  expected('CONSTRAINT','MC_CI_ANOM_DAY_VALUE_CK','MC_CI_ANOMALY_DAYS');
+  expected('CONSTRAINT','MC_CI_ANOM_REVIEW_BIND_UQ','MC_CI_ANOMALY_REVIEWS');
+  expected('CONSTRAINT','MC_CI_ANOM_REVIEW_COUNT_CK','MC_CI_ANOMALY_REVIEWS');
+  expected('CONSTRAINT','MC_CI_ANOM_REVIEW_DATES_CK','MC_CI_ANOMALY_REVIEWS');
+  expected('CONSTRAINT','MC_CI_ANOM_REVIEW_JSON_CK','MC_CI_ANOMALY_REVIEWS');
+  expected('CONSTRAINT','MC_CI_ANOM_REVIEW_PK','MC_CI_ANOMALY_REVIEWS');
+  expected('CONSTRAINT','MC_CI_ANOM_REVIEW_RUN_UQ','MC_CI_ANOMALY_REVIEWS');
+  expected('CONSTRAINT','MC_CI_ANOM_REVIEW_STATE_CK','MC_CI_ANOMALY_REVIEWS');
+  expected('CONSTRAINT','MC_CI_CONTRIBUTIONS_PK','MC_CI_CONTRIBUTIONS');
+  expected('CONSTRAINT','MC_CI_CONTRIBUTIONS_PRESENCE_CK','MC_CI_CONTRIBUTIONS');
+  expected('CONSTRAINT','MC_CI_CONTRIBUTIONS_ROWS_CK','MC_CI_CONTRIBUTIONS');
+  expected('CONSTRAINT','MC_CI_CONTRIBUTIONS_TUPLE_CK','MC_CI_CONTRIBUTIONS');
+  expected('CONSTRAINT','MC_CI_COVERAGE_DAY_CK','MC_CI_COVERAGE');
+  expected('CONSTRAINT','MC_CI_COVERAGE_PK','MC_CI_COVERAGE');
+  expected('CONSTRAINT','MC_CI_COVERAGE_POST_CK','MC_CI_COVERAGE');
+  expected('CONSTRAINT','MC_CI_COVERAGE_STATE_CK','MC_CI_COVERAGE');
+  expected('CONSTRAINT','MC_CI_DELIVERY_ENABLED_CK','MC_CI_DELIVERY_POLICIES');
+  expected('CONSTRAINT','MC_CI_DELIVERY_JSON_CK','MC_CI_DELIVERY_POLICIES');
+  expected('CONSTRAINT','MC_CI_DELIVERY_POLICY_PK','MC_CI_DELIVERY_POLICIES');
+  expected('CONSTRAINT','MC_CI_DELIVERY_VALUES_CK','MC_CI_DELIVERY_POLICIES');
+  expected('CONSTRAINT','MC_CI_DET_DAYS_CHECK_CK','MC_CI_DETECTION_DAYS');
+  expected('CONSTRAINT','MC_CI_DET_DAYS_PK','MC_CI_DETECTION_DAYS');
+  expected('CONSTRAINT','MC_CI_DET_DAYS_REV_UQ','MC_CI_DETECTION_DAYS');
+  expected('CONSTRAINT','MC_CI_DET_POLICY_PK','MC_CI_DETECTION_POLICIES');
+  expected('CONSTRAINT','MC_CI_DET_POLICY_ROUTE_CK','MC_CI_DETECTION_POLICIES');
+  expected('CONSTRAINT','MC_CI_DET_POLICY_VALUES_CK','MC_CI_DETECTION_POLICIES');
+  expected('CONSTRAINT','MC_CI_EVALUATIONS_DATES_CK','MC_CI_EVALUATIONS');
+  expected('CONSTRAINT','MC_CI_EVALUATIONS_HORIZON_CK','MC_CI_EVALUATIONS');
+  expected('CONSTRAINT','MC_CI_EVALUATIONS_ORIGIN_UQ','MC_CI_EVALUATIONS');
+  expected('CONSTRAINT','MC_CI_EVALUATIONS_PHASE_CK','MC_CI_EVALUATIONS');
+  expected('CONSTRAINT','MC_CI_EVALUATIONS_PK','MC_CI_EVALUATIONS');
+  expected('CONSTRAINT','MC_CI_EXPOSURES_JSON_CK','MC_CI_EXPOSURES');
+  expected('CONSTRAINT','MC_CI_EXPOSURES_PK','MC_CI_EXPOSURES');
+  expected('CONSTRAINT','MC_CI_EXPOSURES_STATE_CK','MC_CI_EXPOSURES');
+  expected('CONSTRAINT','MC_CI_FACTS_PK','MC_CI_FACTS');
+  expected('CONSTRAINT','MC_CI_INCIDENTS_DAY_CK','MC_CI_INCIDENTS');
+  expected('CONSTRAINT','MC_CI_INCIDENTS_PK','MC_CI_INCIDENTS');
+  expected('CONSTRAINT','MC_CI_INCIDENTS_START_UQ','MC_CI_INCIDENTS');
+  expected('CONSTRAINT','MC_CI_INCIDENTS_STATE_CK','MC_CI_INCIDENTS');
+  expected('CONSTRAINT','MC_CI_METHODS_CUTOFF_UQ','MC_CI_METHODS');
+  expected('CONSTRAINT','MC_CI_METHODS_JSON_CK','MC_CI_METHODS');
+  expected('CONSTRAINT','MC_CI_METHODS_OML_CK','MC_CI_METHODS');
+  expected('CONSTRAINT','MC_CI_METHODS_PK','MC_CI_METHODS');
+  expected('CONSTRAINT','MC_CI_METHODS_SCOPE_UQ','MC_CI_METHODS');
+  expected('CONSTRAINT','MC_CI_METHODS_STATE_CK','MC_CI_METHODS');
+  expected('CONSTRAINT','MC_CI_MODEL_DAYS_COUNT_CK','MC_CI_MODEL_DAYS');
+  expected('CONSTRAINT','MC_CI_MODEL_DAYS_DAY_CK','MC_CI_MODEL_DAYS');
+  expected('CONSTRAINT','MC_CI_MODEL_DAYS_PK','MC_CI_MODEL_DAYS');
+  expected('CONSTRAINT','MC_CI_MODEL_MEMBERS_NO_CK','MC_CI_MODEL_MEMBERS');
+  expected('CONSTRAINT','MC_CI_MODEL_MEMBERS_PK','MC_CI_MODEL_MEMBERS');
+  expected('CONSTRAINT','MC_CI_MODEL_MEMBERS_TUPLE_UQ','MC_CI_MODEL_MEMBERS');
+  expected('CONSTRAINT','MC_CI_OML_BUILD_PK','MC_CI_OML_BUILDS');
+  expected('CONSTRAINT','MC_CI_OML_BUILD_STATE_CK','MC_CI_OML_BUILDS');
+  expected('CONSTRAINT','MC_CI_OML_HOR_JSON_CK','MC_CI_OML_HORIZONS');
+  expected('CONSTRAINT','MC_CI_OML_HOR_PK','MC_CI_OML_HORIZONS');
+  expected('CONSTRAINT','MC_CI_OML_HOR_STATE_CK','MC_CI_OML_HORIZONS');
+  expected('CONSTRAINT','MC_CI_OML_POL_HORIZON_CK','MC_CI_OML_POLICIES');
+  expected('CONSTRAINT','MC_CI_OML_POL_JSON_CK','MC_CI_OML_POLICIES');
+  expected('CONSTRAINT','MC_CI_OML_POL_METHOD_CK','MC_CI_OML_POLICIES');
+  expected('CONSTRAINT','MC_CI_OML_POL_PK','MC_CI_OML_POLICIES');
+  expected('CONSTRAINT','MC_CI_OML_POL_REV_CK','MC_CI_OML_POLICIES');
+  expected('CONSTRAINT','MC_CI_OUTBOX_ATTEMPTS_CK','MC_CI_OUTBOX');
+  expected('CONSTRAINT','MC_CI_OUTBOX_DELIVERY_CK','MC_CI_OUTBOX');
+  expected('CONSTRAINT','MC_CI_OUTBOX_DISABLED_CK','MC_CI_OUTBOX');
+  expected('CONSTRAINT','MC_CI_OUTBOX_NAMES_CK','MC_CI_OUTBOX');
+  expected('CONSTRAINT','MC_CI_OUTBOX_OPEN_UQ','MC_CI_OUTBOX');
+  expected('CONSTRAINT','MC_CI_OUTBOX_PK','MC_CI_OUTBOX');
+  expected('CONSTRAINT','MC_CI_RESULTS_BASIS_CK','MC_CI_RESULTS');
+  expected('CONSTRAINT','MC_CI_RESULTS_COVERAGE_CK','MC_CI_RESULTS');
+  expected('CONSTRAINT','MC_CI_RESULTS_DATES_CK','MC_CI_RESULTS');
+  expected('CONSTRAINT','MC_CI_RESULTS_KIND_CK','MC_CI_RESULTS');
+  expected('CONSTRAINT','MC_CI_RESULTS_PAYLOAD_CK','MC_CI_RESULTS');
+  expected('CONSTRAINT','MC_CI_RESULTS_PERCENT_CK','MC_CI_RESULTS');
+  expected('CONSTRAINT','MC_CI_RESULTS_PK','MC_CI_RESULTS');
+  expected('CONSTRAINT','MC_CI_RESULTS_ROWS_CK','MC_CI_RESULTS');
+  expected('CONSTRAINT','MC_CI_RESULTS_RUN_UQ','MC_CI_RESULTS');
+  expected('CONSTRAINT','MC_CI_RESULTS_WINDOW_UQ','MC_CI_RESULTS');
+  expected('CONSTRAINT','MC_CI_RUNS_BASIS_CK','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_RUNS_COVERAGE_CK','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_RUNS_DATES_CK','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_RUNS_ELIGIBLE_CK','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_RUNS_GUARD_CK','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_RUNS_INPUT_CK','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_RUNS_PK','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_RUNS_PURPOSE_CK','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_RUNS_SCOPE_UQ','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_RUNS_SOURCE_CK','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_RUNS_STATUS_CK','MC_CI_RUNS');
+  expected('CONSTRAINT','MC_CI_SCENARIOS_JSON_CK','MC_CI_SCENARIOS');
+  expected('CONSTRAINT','MC_CI_SCENARIOS_PERCENT_CK','MC_CI_SCENARIOS');
+  expected('CONSTRAINT','MC_CI_SCENARIOS_PK','MC_CI_SCENARIOS');
+  expected('CONSTRAINT','MC_CI_SCENARIOS_WINDOW_CK','MC_CI_SCENARIOS');
+  expected('CONSTRAINT','MC_CI_SCOPES_DEF_CK','MC_CI_SCOPES');
+  expected('CONSTRAINT','MC_CI_SCOPES_KIND_CK','MC_CI_SCOPES');
+  expected('CONSTRAINT','MC_CI_SCOPES_MEMBERS_CK','MC_CI_SCOPES');
+  expected('CONSTRAINT','MC_CI_SCOPES_NAMES_CK','MC_CI_SCOPES');
+  expected('CONSTRAINT','MC_CI_SCOPES_PK','MC_CI_SCOPES');
+  expected('CONSTRAINT','MC_CI_SCOPES_REV_CK','MC_CI_SCOPES');
+  expected('CONSTRAINT','MC_CI_SCOPES_REV_UQ','MC_CI_SCOPES');
+  expected('FOREIGN KEY','MC_CI_ANOM_DAY_REVIEW_FK','MC_CI_ANOMALY_DAYS');
+  expected('FOREIGN KEY','MC_CI_ANOM_REVIEW_METHOD_FK','MC_CI_ANOMALY_REVIEWS');
+  expected('FOREIGN KEY','MC_CI_ANOM_REVIEW_RUN_FK','MC_CI_ANOMALY_REVIEWS');
+  expected('FOREIGN KEY','MC_CI_CONTRIBUTIONS_RESULT_FK','MC_CI_CONTRIBUTIONS');
+  expected('FOREIGN KEY','MC_CI_CONTRIBUTIONS_RUN_FK','MC_CI_CONTRIBUTIONS');
+  expected('FOREIGN KEY','MC_CI_COVERAGE_CERT_FK','MC_CI_COVERAGE');
+  expected('FOREIGN KEY','MC_CI_COVERAGE_GEN_FK','MC_CI_COVERAGE');
+  expected('FOREIGN KEY','MC_CI_COVERAGE_RUN_FK','MC_CI_COVERAGE');
+  expected('FOREIGN KEY','MC_CI_DELIVERY_RUN_FK','MC_CI_DELIVERY_POLICIES');
+  expected('FOREIGN KEY','MC_CI_DELIVERY_SCOPE_FK','MC_CI_DELIVERY_POLICIES');
+  expected('FOREIGN KEY','MC_CI_DET_DAYS_INC_FK','MC_CI_DETECTION_DAYS');
+  expected('FOREIGN KEY','MC_CI_DET_DAYS_PRED_FK','MC_CI_DETECTION_DAYS');
+  expected('FOREIGN KEY','MC_CI_DET_DAYS_RUN_FK','MC_CI_DETECTION_DAYS');
+  expected('FOREIGN KEY','MC_CI_DET_POLICY_SCOPE_FK','MC_CI_DETECTION_POLICIES');
+  expected('FOREIGN KEY','MC_CI_EVALUATIONS_METHOD_FK','MC_CI_EVALUATIONS');
+  expected('FOREIGN KEY','MC_CI_EXPOSURES_BASE_FK','MC_CI_EXPOSURES');
+  expected('FOREIGN KEY','MC_CI_EXPOSURES_RUN_FK','MC_CI_EXPOSURES');
+  expected('FOREIGN KEY','MC_CI_FACTS_RUN_FK','MC_CI_FACTS');
+  expected('FOREIGN KEY','MC_CI_INCIDENTS_MODEL_FK','MC_CI_INCIDENTS');
+  expected('FOREIGN KEY','MC_CI_INCIDENTS_PRED_FK','MC_CI_INCIDENTS');
+  expected('FOREIGN KEY','MC_CI_INCIDENTS_RUN_FK','MC_CI_INCIDENTS');
+  expected('FOREIGN KEY','MC_CI_INCIDENTS_SCOPE_FK','MC_CI_INCIDENTS');
+  expected('FOREIGN KEY','MC_CI_METHODS_RUN_FK','MC_CI_METHODS');
+  expected('FOREIGN KEY','MC_CI_MODEL_DAYS_RUN_FK','MC_CI_MODEL_DAYS');
+  expected('FOREIGN KEY','MC_CI_MODEL_MEMBERS_RUN_FK','MC_CI_MODEL_MEMBERS');
+  expected('FOREIGN KEY','MC_CI_OML_BUILD_METHOD_FK','MC_CI_OML_BUILDS');
+  expected('FOREIGN KEY','MC_CI_OML_HOR_METHOD_FK','MC_CI_OML_HORIZONS');
+  expected('FOREIGN KEY','MC_CI_OML_HOR_RUN_FK','MC_CI_OML_HORIZONS');
+  expected('FOREIGN KEY','MC_CI_OML_POL_SCOPE_FK','MC_CI_OML_POLICIES');
+  expected('FOREIGN KEY','MC_CI_OUTBOX_BASELINE_FK','MC_CI_OUTBOX');
+  expected('FOREIGN KEY','MC_CI_OUTBOX_INC_FK','MC_CI_OUTBOX');
+  expected('FOREIGN KEY','MC_CI_OUTBOX_NOTIF_FK','MC_CI_OUTBOX');
+  expected('FOREIGN KEY','MC_CI_OUTBOX_PRINCIPAL_FK','MC_CI_OUTBOX');
+  expected('FOREIGN KEY','MC_CI_OUTBOX_REALM_FK','MC_CI_OUTBOX');
+  expected('FOREIGN KEY','MC_CI_OUTBOX_SCOPE_FK','MC_CI_OUTBOX');
+  expected('FOREIGN KEY','MC_CI_OUTBOX_SUBJECT_FK','MC_CI_OUTBOX');
+  expected('FOREIGN KEY','MC_CI_RESULTS_METHOD_FK','MC_CI_RESULTS');
+  expected('FOREIGN KEY','MC_CI_RESULTS_PRIOR_FK','MC_CI_RESULTS');
+  expected('FOREIGN KEY','MC_CI_RESULTS_RUN_FK','MC_CI_RESULTS');
+  expected('FOREIGN KEY','MC_CI_RUNS_COV_GEN_FK','MC_CI_RUNS');
+  expected('FOREIGN KEY','MC_CI_RUNS_SCOPE_FK','MC_CI_RUNS');
+  expected('FOREIGN KEY','MC_CI_SCENARIOS_ACTOR_FK','MC_CI_SCENARIOS');
+  expected('FOREIGN KEY','MC_CI_SCENARIOS_BASE_FK','MC_CI_SCENARIOS');
+  expected('FOREIGN KEY','MC_CI_SCENARIOS_REALM_FK','MC_CI_SCENARIOS');
+  expected('FOREIGN KEY','MC_CI_SCENARIOS_RUN_FK','MC_CI_SCENARIOS');
+  expected('FOREIGN KEY','MC_CI_SCOPES_MODEL_RUN_FK','MC_CI_SCOPES');
+  expected('FOREIGN KEY','MC_CI_SCOPES_PUB_FK','MC_CI_SCOPES');
+  expected('INDEX','MC_CI_ANOM_DAY_PK','MC_CI_ANOMALY_DAYS');
+  expected('INDEX','MC_CI_ANOM_REVIEW_BIND_UQ','MC_CI_ANOMALY_REVIEWS');
+  expected('INDEX','MC_CI_ANOM_REVIEW_PK','MC_CI_ANOMALY_REVIEWS');
+  expected('INDEX','MC_CI_ANOM_REVIEW_RUN_UQ','MC_CI_ANOMALY_REVIEWS');
+  expected('INDEX','MC_CI_CONTRIBUTIONS_PK','MC_CI_CONTRIBUTIONS');
+  expected('INDEX','MC_CI_CONTRIBUTIONS_RESULT_IX','MC_CI_CONTRIBUTIONS');
+  expected('INDEX','MC_CI_COVERAGE_CERT_IX','MC_CI_COVERAGE');
+  expected('INDEX','MC_CI_COVERAGE_GEN_IX','MC_CI_COVERAGE');
+  expected('INDEX','MC_CI_COVERAGE_PK','MC_CI_COVERAGE');
+  expected('INDEX','MC_CI_DELIVERY_POLICY_PK','MC_CI_DELIVERY_POLICIES');
+  expected('INDEX','MC_CI_DET_DAYS_PK','MC_CI_DETECTION_DAYS');
+  expected('INDEX','MC_CI_DET_DAYS_REV_UQ','MC_CI_DETECTION_DAYS');
+  expected('INDEX','MC_CI_DET_POLICY_PK','MC_CI_DETECTION_POLICIES');
+  expected('INDEX','MC_CI_EVALUATIONS_ORIGIN_UQ','MC_CI_EVALUATIONS');
+  expected('INDEX','MC_CI_EVALUATIONS_PK','MC_CI_EVALUATIONS');
+  expected('INDEX','MC_CI_EXPOSURES_PK','MC_CI_EXPOSURES');
+  expected('INDEX','MC_CI_FACTS_DAY_IX','MC_CI_FACTS');
+  expected('INDEX','MC_CI_FACTS_PK','MC_CI_FACTS');
+  expected('INDEX','MC_CI_INCIDENTS_PK','MC_CI_INCIDENTS');
+  expected('INDEX','MC_CI_INCIDENTS_START_UQ','MC_CI_INCIDENTS');
+  expected('INDEX','MC_CI_METHODS_CUTOFF_UQ','MC_CI_METHODS');
+  expected('INDEX','MC_CI_METHODS_PK','MC_CI_METHODS');
+  expected('INDEX','MC_CI_METHODS_SCOPE_UQ','MC_CI_METHODS');
+  expected('INDEX','MC_CI_MODEL_DAYS_PK','MC_CI_MODEL_DAYS');
+  expected('INDEX','MC_CI_MODEL_MEMBERS_PK','MC_CI_MODEL_MEMBERS');
+  expected('INDEX','MC_CI_MODEL_MEMBERS_TUPLE_UQ','MC_CI_MODEL_MEMBERS');
+  expected('INDEX','MC_CI_OML_BUILD_METHOD_IX','MC_CI_OML_BUILDS');
+  expected('INDEX','MC_CI_OML_BUILD_PK','MC_CI_OML_BUILDS');
+  expected('INDEX','MC_CI_OML_HOR_METHOD_IX','MC_CI_OML_HORIZONS');
+  expected('INDEX','MC_CI_OML_HOR_PK','MC_CI_OML_HORIZONS');
+  expected('INDEX','MC_CI_OML_HOR_SCOPE_IX','MC_CI_OML_HORIZONS');
+  expected('INDEX','MC_CI_OML_POL_PK','MC_CI_OML_POLICIES');
+  expected('INDEX','MC_CI_OUTBOX_OPEN_UQ','MC_CI_OUTBOX');
+  expected('INDEX','MC_CI_OUTBOX_PK','MC_CI_OUTBOX');
+  expected('INDEX','MC_CI_RESULTS_PK','MC_CI_RESULTS');
+  expected('INDEX','MC_CI_RESULTS_RUN_UQ','MC_CI_RESULTS');
+  expected('INDEX','MC_CI_RESULTS_WINDOW_UQ','MC_CI_RESULTS');
+  expected('INDEX','MC_CI_RUNS_COV_GEN_IX','MC_CI_RUNS');
+  expected('INDEX','MC_CI_RUNS_PK','MC_CI_RUNS');
+  expected('INDEX','MC_CI_RUNS_SCOPE_UQ','MC_CI_RUNS');
+  expected('INDEX','MC_CI_SCENARIOS_PK','MC_CI_SCENARIOS');
+  expected('INDEX','MC_CI_SCOPES_PK','MC_CI_SCOPES');
+  expected('INDEX','MC_CI_SCOPES_REV_UQ','MC_CI_SCOPES');
+  expected('JOB','JOB_COST_INTELLIGENCE',null);
+  expected('PACKAGE','MC_COST_INTEL_ANOMALY_PKG',null);
+  expected('PACKAGE','MC_COST_INTEL_API_PKG',null);
+  expected('PACKAGE','MC_COST_INTEL_CALC_PKG',null);
+  expected('PACKAGE','MC_COST_INTEL_CALENDAR_PKG',null);
+  expected('PACKAGE','MC_COST_INTEL_DATA_PKG',null);
+  expected('PACKAGE','MC_COST_INTEL_DETECT_PKG',null);
+  expected('PACKAGE','MC_COST_INTEL_LONG_PKG',null);
+  expected('PACKAGE','MC_COST_INTEL_MODEL_PKG',null);
+  expected('PACKAGE','MC_COST_INTEL_OML_PKG',null);
+  expected('PACKAGE','MC_COST_INTEL_WORKER_PKG',null);
+  expected('PACKAGE BODY','MC_COST_INTEL_ANOMALY_PKG',null);
+  expected('PACKAGE BODY','MC_COST_INTEL_API_PKG',null);
+  expected('PACKAGE BODY','MC_COST_INTEL_CALC_PKG',null);
+  expected('PACKAGE BODY','MC_COST_INTEL_CALENDAR_PKG',null);
+  expected('PACKAGE BODY','MC_COST_INTEL_DATA_PKG',null);
+  expected('PACKAGE BODY','MC_COST_INTEL_DETECT_PKG',null);
+  expected('PACKAGE BODY','MC_COST_INTEL_LONG_PKG',null);
+  expected('PACKAGE BODY','MC_COST_INTEL_MODEL_PKG',null);
+  expected('PACKAGE BODY','MC_COST_INTEL_OML_PKG',null);
+  expected('PACKAGE BODY','MC_COST_INTEL_WORKER_PKG',null);
+  expected('TABLE','COST_USAGE_TIMESERIES_DAILY',null);
+  expected('TABLE','MC_CI_ANOMALY_DAYS',null);
+  expected('TABLE','MC_CI_ANOMALY_REVIEWS',null);
+  expected('TABLE','MC_CI_CONTRIBUTIONS',null);
+  expected('TABLE','MC_CI_COVERAGE',null);
+  expected('TABLE','MC_CI_DELIVERY_POLICIES',null);
+  expected('TABLE','MC_CI_DETECTION_DAYS',null);
+  expected('TABLE','MC_CI_DETECTION_POLICIES',null);
+  expected('TABLE','MC_CI_EVALUATIONS',null);
+  expected('TABLE','MC_CI_EXPOSURES',null);
+  expected('TABLE','MC_CI_FACTS',null);
+  expected('TABLE','MC_CI_INCIDENTS',null);
+  expected('TABLE','MC_CI_METHODS',null);
+  expected('TABLE','MC_CI_MODEL_DAYS',null);
+  expected('TABLE','MC_CI_MODEL_MEMBERS',null);
+  expected('TABLE','MC_CI_OML_BUILDS',null);
+  expected('TABLE','MC_CI_OML_HORIZONS',null);
+  expected('TABLE','MC_CI_OML_POLICIES',null);
+  expected('TABLE','MC_CI_OUTBOX',null);
+  expected('TABLE','MC_CI_RESULTS',null);
+  expected('TABLE','MC_CI_RUNS',null);
+  expected('TABLE','MC_CI_SCENARIOS',null);
+  expected('TABLE','MC_CI_SCOPES',null);
+  -- END GENERATED COST INTELLIGENCE INVENTORY
+  if missing_=0 then report('COMPILATION','VALID','Canonical Cost Intelligence objects, keys, indexes and job definition are present.');
+  else report('COMPILATION','INCOMPLETE',missing_||' canonical definitions require the matching bundle; compilation is not OML execution.');end if;
+  select count(*) into n from user_procedures where object_name='MC_COST_INTEL_WORKER_PKG'
+    and procedure_name='RUN_OML_REFRESH' and authid='CURRENT_USER';
+  if n<>1 then report('OWNER_CONTEXT','BLOCKED','Expected invoker-rights MC_COST_INTEL_WORKER_PKG.RUN_OML_REFRESH is unavailable.');end if;
+  select count(*) into effective_ from session_privs where privilege='CREATE MINING MODEL';
+  select count(*) into direct_ from user_sys_privs where privilege='CREATE MINING MODEL';
+  report('OML_PRIVILEGES',case when effective_>0 and direct_>0 then 'OWNER_GRANT_PRESENT' else 'BLOCKED' end,
+    'CREATE MINING MODEL effective in this session='||effective_||'; direct='||direct_||
+    '. ADMIN remedy: GRANT CREATE MINING MODEL TO '||dbms_assert.enquote_name(owner_,false)||'; never grant ANY MINING privileges or grant to APEX users.');
+  select count(distinct procedure_name) into n from all_procedures where owner='SYS'
+    and object_name='DBMS_DATA_MINING' and procedure_name in ('CREATE_MODEL2','DROP_MODEL');
+  report('OML_APIS',case when n=2 then 'VISIBLE' else 'BLOCKED' end,
+    'SYS.DBMS_DATA_MINING CREATE_MODEL2 and DROP_MODEL visible='||n||'/2. If unavailable, DBA verifies OML support and EXECUTE ON SYS.DBMS_DATA_MINING for the application owner.');
+  begin
+    execute immediate 'declare settings_ sys.dbms_data_mining.setting_list; begin settings_(''PREP_AUTO''):=''ON'';end;';
+    report('OML_APIS','TYPE_ACCESS','SETTING_LIST compiles in this owner session; no model created.');
+  exception when others then report('OML_APIS','BLOCKED',sqlerrm);end;
+  report('OML_RUNTIME','UNVERIFIED','Required algorithms: generalized linear regression, XGBoost regression, exponential smoothing and one-class SVM. API visibility and compilation do not prove algorithm execution or Scheduler privileges.');
+  select default_tablespace into tablespace_ from user_users;
+  select count(*) into n from session_privs where privilege='UNLIMITED TABLESPACE';
+  if n>0 then report('OML_RESOURCES','QUOTA_VISIBLE','Existing unlimited tablespace privilege; this tool never grants it.');
+  else
+    select nvl(max(case when max_bytes=-1 then -1 else max_bytes-bytes end),0) into quota_
+      from user_ts_quotas where tablespace_name=tablespace_;
+    report('OML_RESOURCES',case when quota_=-1 or quota_>0 then 'QUOTA_VISIBLE' else 'DBA_ACTION' end,
+      'Default tablespace='||tablespace_||'; available quota bytes='||quota_||' (-1 means unlimited). DBA reviews bounded quota, free storage, temporary space, CPU and service limits; no fixed model-space guarantee.');
+  end if;
+  begin
+    execute immediate 'begin :f:=mc_cost_intel_calendar_pkg.history_from(:d); :c:=mc_cost_intel_calendar_pkg.mature_through(systimestamp);end;'
+      using out first_,in today_,out cutoff_;
+    report('DATA_WINDOW','BOUNDED','Normalized source COST_USAGE_TIMESERIES_DAILY; '||to_char(first_,'YYYY-MM-DD')||
+      ' through '||to_char(cutoff_,'YYYY-MM-DD')||' inclusive. 13 active calendar months; excludes the three most recent UTC days and today.');
+    open cursor_ for 'select s.scope_id,s.account_id,s.currency,s.scope_kind,count(p.horizon),s.published_model_run_id
+      from mc_ci_scopes s left join mc_ci_oml_policies p on p.scope_id=s.scope_id
+      where s.scope_kind in (''ACCOUNT'',''WORKLOAD'') group by s.scope_id,s.account_id,s.currency,s.scope_kind,s.published_model_run_id order by s.scope_id';
+    n:=0;
+    loop
+      fetch cursor_ into scope_,account_,currency_,kind_,policies_,run_;exit when cursor_%notfound;n:=n+1;
+      report('DATA_READINESS',case when policies_=4 then 'POLICIES_PRESENT' else 'NOT_CONFIGURED' end,
+        'Scope='||scope_||'; account='||account_||'; currency='||currency_||'; kind='||kind_||
+        '; policies='||policies_||'/4 (MONTH_END, MONTH_3, MONTH_6, DAY_30). Configure exact EUR/USD scopes and evidenced methods locally; never portable seeds.');
+      if run_ is not null then
+        execute immediate 'select count(*),max(source_day) from mc_ci_model_days where run_id=:r and normalized_row_count>0 and null_cost_count=0'
+          into observations_,tail_ using run_;
+        report('DATA_READINESS','SAVED_SNAPSHOT','Scope='||scope_||'; published model run='||run_||'; valid saved observations='||observations_||
+          '; tail='||to_char(tail_,'YYYY-MM-DD')||'. Counts alone do not establish current eligibility or complete features.');
+      else report('DATA_READINESS','UNAVAILABLE','Scope='||scope_||' has no published model generation. No rows or zero-cost observations fabricated.');end if;
+    end loop;close cursor_;
+    if n=0 then report('DATA_READINESS','NOT_CONFIGURED','No exact account/workload scopes. Owner configures scopes, currencies and all four explicit method policies before a bounded run.');end if;
+    execute immediate 'select count(distinct currency) from mc_ci_scopes s where currency in (''EUR'',''USD'') and scope_kind in (''ACCOUNT'',''WORKLOAD'') and (select count(*) from mc_ci_oml_policies p where p.scope_id=s.scope_id)=4' into n;
+    report('DATA_READINESS',case when n=2 then 'CURRENCIES_CONFIGURED' else 'NOT_CONFIGURED' end,
+      'Configured currencies EUR/USD='||n||'/2. Each intended account/currency needs its own exact scope and four policies; global counts do not prove the desired account is configured.');
+    report('DATA_READINESS','ELIGIBILITY_REQUIRED','Worker checks at least 64 training observations/complete feature rows, observed mature tail, ESM contiguous suffix/step limits and anomaly held-out training. Missing history stays unavailable; provider completeness is never inferred.');
+  exception when others then
+    begin if cursor_%isopen then close cursor_;end if;exception when invalid_cursor then null;end;
+    report('DATA_READINESS','UNAVAILABLE',sqlerrm||'; install canonical definitions and normalized history before attempting training.');
+  end;
+  begin
+    execute immediate 'select count(*) from mc_ci_oml_builds where state in (''OWNED'',''CLEANUP_FAILED'')' into n;
+    report('MODEL_CLEANUP',case when n=0 then 'NO_PENDING_OWNED_MODELS' else 'OWNER_REVIEW' end,
+      'Unfinished exact-owned model journal entries='||n||'. Inspect exact model_name and invocation_token; never delete models by prefix.');
+    execute immediate 'select count(*) from USER_MINING_MODELS' into n;
+    report('MODEL_CLEANUP','INFORMATION','USER_MINING_MODELS rows='||n||'; zero after a successful run is expected. Other models need not belong to this application.');
+  exception when others then report('MODEL_CLEANUP','UNVERIFIED',sqlerrm);end;
+  begin
+    select enabled into enabled_ from user_scheduler_jobs where job_name='JOB_COST_INTELLIGENCE';
+    report('SCHEDULER',case when enabled_='FALSE' then 'DISABLED' else 'ACTIVE' end,
+      'Recurring refresh requires separate owner authorization. Installation must leave this job disabled; this report never enables or disables it.');
+  exception when no_data_found then report('SCHEDULER','MISSING','Install the disabled JOB_COST_INTELLIGENCE definition from the matching bundle.');end;
+  report('WORKER_EXECUTION','UNVERIFIED','Only a separately authorized bounded direct-owner worker run proves saved forecasts, comparisons, statistical publication and exact owned-model cleanup. An ADMIN session is not that proof.');
+  report('CONSUMERS','SEPARATE','Import matching APEX/static assets separately. Home and Analysis require authorized exact scopes matching saved publications; page refresh never trains. Monthly 730-hour comparison does not alter calendar financial totals.');
+  report('OML_REPORT','COMPLETE','Read-only report completed. VALID objects, runtime verification, data readiness and scheduler activation are separate states.');
+end;
+/
+exit success rollback
+MC_OML_READINESS
+}
+if [[ "$mode" == OML_READINESS ]]; then
+  [[ "$connection" =~ ^[A-Za-z][A-Za-z0-9_.-]{0,127}$ ]] || fail 'OML_READINESS requires --connection APPLICATION_OWNER'
+  [[ -z "$bundle$admin_connection$journal_directory$target_connection$schema$workspace$workspace_mode$target_id$first_admin$prerequisites$confirm$apex_offset" && "$interactive" == N && "$apply_missing_grants" == N && "$dry" == N && "$data_ts" == DATA && "$temp_ts" == TEMP ]] || fail 'OML_READINESS accepts only --connection; it never provisions, grants or trains'
+  mc_oml_readiness_sql > "$tmp/cost-intelligence-readiness.sql"
+  sql -s -L -name "$connection" "@$tmp/cost-intelligence-readiness.sql"
+  exit $?
+fi
 if [[ "$mode" == UNINSTALL ]]; then
   [[ "$admin_connection" =~ ^[A-Za-z][A-Za-z0-9_.-]{0,127}$ && "$schema" =~ ^[A-Z][A-Z0-9_\$#]{0,127}$ && "$workspace" =~ ^[A-Z][A-Z0-9_]{0,254}$ && "$target_id" =~ ^[1-9][0-9]{0,9}$ ]] || fail 'UNINSTALL requires valid --admin-connection, --schema, --workspace and --target-app-id'
   [[ "$schema" != ADMIN && "$schema" != SYS && "$schema" != SYSTEM && "$workspace" != INTERNAL ]] || fail 'Protected database or workspace identity'
@@ -7885,10 +8452,9 @@ fi
 if [[ "$mode" == UPDATE ]]; then
   # UPDATE has one route. Never fall through to the INITIAL installer.
   tmp="$(cd "$tmp" && pwd -P)"
-  update_contract="$(mc_update_contract "$bundle" "$tmp/contract-probe")" || fail 'Invalid or unsupported UPDATE bundle metadata'
-  [[ "$update_contract" == mc-bundle-1.13.0 ]] || fail "Unsupported UPDATE bundle contract: $update_contract; export a current release"
   [[ "$connection" =~ ^[A-Za-z][A-Za-z0-9_.-]{0,127}$ ]] || fail 'UPDATE requires a valid --connection'
-  [[ "$apply_missing_grants" == N && -z "$admin_connection" ]] || fail 'UPDATE uses only the target connection; provision required grants separately'
+  [[ ( "$apply_missing_grants" == N && -z "$admin_connection" ) ||
+     ( "$apply_missing_grants" == Y && "$admin_connection" =~ ^[A-Za-z][A-Za-z0-9_.-]{0,127}$ ) ]] || fail 'UPDATE grants require explicit --apply-missing-grants --admin-connection; otherwise use only the target connection'
   [[ -z "$target_id$workspace$workspace_mode$schema$target_connection$first_admin$journal_directory$prerequisites$confirm" && "$apex_offset_supplied" == N && "$data_ts" == DATA && "$temp_ts" == TEMP ]] || fail 'UPDATE rejects INITIAL options'
   log="$(mktemp "${TMPDIR:-/tmp}/mc-update-diagnostic.XXXXXX")"
   mc_update_run "$bundle" "$connection" "$tmp/coordinated-update" "$dry" 2>&1 | tee -a "$log"
@@ -7955,13 +8521,15 @@ begin
   execute immediate
     'grant create session, create table, create sequence, create view, ' ||
     'create materialized view, create procedure, create trigger, create type, ' ||
-    'create job, create property graph to ' ||
+    'create job, create property graph, create mining model to ' ||
     dbms_assert.enquote_name(l_schema, false);
 
   -- DBMS_CLOUD external-table ingestion uses this directory under definer
   -- rights. A broad DWROLE is not a substitute for these direct grants.
   execute immediate 'grant read, write on directory DATA_PUMP_DIR to ' ||
     dbms_assert.enquote_name(l_schema, false);
+  -- Native OML belongs to the application owner, never individual APEX users.
+  execute immediate 'grant execute on sys.dbms_data_mining to ' || dbms_assert.enquote_name(l_schema,false);
   -- INITIAL workers retain a database mutex through DDL commits and disconnect.
   execute immediate 'grant execute on sys.dbms_lock to ' || dbms_assert.enquote_name(l_schema,false);
 
@@ -8096,6 +8664,7 @@ progress_start() {
     90_jobs|artifact-90_jobs-*) title='Install scheduled tasks' ;;
     initial-registry-receipts) title='Verify installed release definitions' ;;
     95_app_config) title='Set up application configuration' ;;
+    initial-target-identity) title='Set up target application identity' ;;
     96_chatbot_seed) title='Install assistant configuration' ;;
     97_semantic_seed) title='Install assistant data definitions' ;;
     deployment-runtime-body) title='Finish installing the deployment tools' ;;
@@ -8397,6 +8966,7 @@ while IFS='|' read -r phase_kind phase_label phase_path phase_required phase_ext
         objects-storage)
           initial_product_plan APPLICATION_STORAGE
           initial_bootstrap_storage
+          initial_target_identity
           ;;
         objects-code) initial_artifact_objects ;;
         *) fail 'Unknown ordered object stage' ;;
